@@ -173,7 +173,7 @@ textarea{min-height:170px;resize:vertical;line-height:1.7}
               <div id="ownerLogin"><input type="password" id="ownerCode" placeholder="主人密碼" autocomplete="off" aria-label="主人密碼"><button class="btn s" type="button" id="ownerLoginBtn">登入</button></div>
               <div id="ownerTools" hidden>
                 <input type="file" id="ownerFile" accept="image/*"><button class="btn s" type="button" id="ownerBtn">更新大頭貼</button>
-                <div class="small">主人模式：好友與留言旁會出現「刪除」。</div>
+                <div class="small">主人模式：可編輯、刪除所有留言，也可刪除任何好友。此瀏覽器會記住登入，共用電腦請按登出。</div>
                 <a href="#" id="ownerOut">登出</a>
               </div>
             </div>
@@ -220,6 +220,7 @@ textarea{min-height:170px;resize:vertical;line-height:1.7}
               </div>
             </div>
           </div>
+          <div class="frow"><label for="fPw">管理密碼</label><div><input type="password" id="fPw" maxlength="40" autocomplete="new-password" placeholder="選填，至少 4 個字元"><div class="small">設定後，之後在任何裝置都能用這個密碼刪除自己的好友資料；沒設的話，只有這個瀏覽器和小站主人能刪除。</div></div></div>
           <div class="btnrow"><button class="btn" type="submit" id="fBtn">加入好友</button><span class="status" id="fStatus" role="status"></span></div>
         </form>
       </section>
@@ -243,6 +244,7 @@ textarea{min-height:170px;resize:vertical;line-height:1.7}
             <div class="frow"><label for="mHint">密碼提示</label><div><input type="text" id="mHint" maxlength="30" placeholder="選填，會公開顯示，例如「我們的暗號」"></div></div>
             <div class="small">內容會在你的瀏覽器加密後才送出，忘記密碼就無法找回；請記得把密碼告訴蓓雯喔！</div>
           </div>
+          <div class="frow"><label for="mAdminPw">管理密碼</label><div><input type="password" id="mAdminPw" maxlength="40" autocomplete="new-password" placeholder="選填，至少 4 個字元"><div class="small">設定後，之後在任何裝置都能用這個密碼編輯或刪除這則留言；沒設的話，只有這個瀏覽器和小站主人能編輯、刪除。（和悄悄話密碼是兩回事）</div></div></div>
           <div class="btnrow"><button class="btn" type="submit" id="mBtn">送出留言</button><span class="status" id="mStatus" role="status"></span></div>
         </form>
 
@@ -309,6 +311,43 @@ var firebaseConfig = {
   function avatarEl(f) {
     return el("img", { src: f && safeImg(f.photo) ? f.photo : DEF, alt: (f ? f.name : "") + " 的大頭貼" });
   }
+  var tmpTok = {};
+  function newTok(id, pw) {
+    if (!pw) return Promise.resolve(b64(crypto.getRandomValues(new Uint8Array(24))));
+    return crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"]).then(function (k) {
+      return crypto.subtle.deriveBits({ name: "PBKDF2", salt: new TextEncoder().encode("anne:" + id), iterations: 100000, hash: "SHA-256" }, k, 256);
+    }).then(function (bits) { return b64(new Uint8Array(bits)); });
+  }
+  function authFn(kind, id) {
+    if (ownerCode) return function (b) { b.set(db.doc("owner/key"), { code: ownerCode }); };
+    var t = toks[id] || tmpTok[id];
+    if (t) return function (b) { b.set(db.doc((kind === "m" ? "proofs/" : "fproofs/") + id), { p: t }); };
+    return null;
+  }
+  function askPw(slot, id, cb) {
+    slot.textContent = "";
+    var i = el("input", { type: "password", "aria-label": "管理密碼", placeholder: "輸入管理密碼", autocomplete: "off", style: "width:150px" });
+    var go = function () {
+      if (!i.value) return;
+      newTok(id, i.value).then(cb);
+    };
+    i.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); go(); } });
+    slot.appendChild(el("span", { "class": "small", text: "請輸入當初設定的管理密碼：" }));
+    slot.appendChild(i);
+    slot.appendChild(el("button", { "class": "btn s", type: "button", text: "確定", on: { click: go } }));
+    slot.appendChild(el("a", { href: "#", text: "取消", on: { click: function (e) { e.preventDefault(); renderFriends(); renderMsgs(); } } }));
+    i.focus();
+  }
+  function showErr(slot, msg) { slot.textContent = ""; slot.appendChild(el("span", { "class": "status err", text: msg })); }
+  function deleteEntry(kind, id, slot) {
+    var go = function () {
+      var b = db.batch(); authFn(kind, id)(b);
+      b.delete(db.doc((kind === "m" ? "messages/" : "friends/") + id));
+      b.commit().then(function () { delete toks[id]; delete tmpTok[id]; saveToks(); })
+        .catch(function () { delete tmpTok[id]; showErr(slot, "密碼不正確，或沒有權限刪除。"); });
+    };
+    if (authFn(kind, id)) go(); else askPw(slot, id, function (tok) { tmpTok[id] = tok; go(); });
+  }
   function armDelete(btn, action) {
     var armed = false, t;
     btn.addEventListener("click", function (e) {
@@ -343,11 +382,9 @@ var firebaseConfig = {
       grid.style.cssText = "list-style:none;padding:0";
       newest.slice((fpage - 1) * FPER, fpage * FPER).forEach(function (f) {
         var ops = el("div", { "class": "ops" }, [el("a", { href: "#board", text: "去留言", on: { click: function () { $("#mWho").value = f.id; } } })]);
-        if (ownerCode) {
-          var del = el("a", { href: "#", text: "刪除" });
-          armDelete(del, function () { var b = db.batch(); b.set(db.doc("owner/key"), { code: ownerCode }); b.delete(db.doc("friends/" + f.id)); b.commit().catch(function () {}); });
-          ops.appendChild(del);
-        }
+        var del = el("a", { href: "#", text: "刪除" });
+        armDelete(del, function () { deleteEntry("f", f.id, ops); });
+        ops.appendChild(del);
         grid.appendChild(el("li", { "class": "fc" }, [
           avatarEl(f), el("b", { text: f.name }), el("div", { "class": "tag", text: f.tag || "" }),
           el("div", { "class": "date", text: fmt(f.ts).slice(0, 10) + " 加入" }), ops
@@ -373,12 +410,6 @@ var firebaseConfig = {
     $("#mWhoHint").textContent = friends.length ? "" : "還沒加入好友嗎？請先到「好友」頁面加入。";
   }
 
-  function removeMsg(id, mineMsg) {
-    var b = db.batch();
-    if (mineMsg) b.set(db.doc("proofs/" + id), { p: toks[id] }); else b.set(db.doc("owner/key"), { code: ownerCode });
-    b.delete(db.doc("messages/" + id));
-    b.commit().then(function () { delete toks[id]; saveToks(); }).catch(function () {});
-  }
   function editForm(m) {
     var ta = el("textarea", { id: "eText", maxlength: "2000", "aria-label": "編輯留言" }); ta.value = editDraft;
     ta.addEventListener("input", function () { editDraft = ta.value; });
@@ -391,11 +422,15 @@ var firebaseConfig = {
       save.disabled = true; st.className = "status"; st.textContent = "儲存中…";
       var fields = m.priv ? encrypt(t, pwmem[m.id]) : Promise.resolve({ text: t });
       fields.then(function (f) {
-        var b = db.batch(); f.edited = Date.now();
-        b.set(db.doc("proofs/" + m.id), { p: toks[m.id] });
+        var au = authFn("m", m.id);
+        if (!au) { editing = null; editDraft = ""; renderMsgs(); return; }
+        var b = db.batch(); f.edited = Date.now(); au(b);
         b.update(db.doc("messages/" + m.id), f);
-        return b.commit().then(function () { if (m.priv) unlocked[m.id] = t; editing = null; editDraft = ""; renderMsgs(); });
-      }).catch(function () { save.disabled = false; st.className = "status err"; st.textContent = "儲存失敗，請稍後再試。"; });
+        return b.commit().then(function () {
+          if (tmpTok[m.id]) { toks[m.id] = tmpTok[m.id]; delete tmpTok[m.id]; saveToks(); }
+          if (m.priv) unlocked[m.id] = t; editing = null; editDraft = ""; renderMsgs();
+        });
+      }).catch(function () { delete tmpTok[m.id]; save.disabled = false; st.className = "status err"; st.textContent = "儲存失敗：管理密碼不正確，或沒有權限。"; });
     });
     var cancel = el("button", { "class": "btn s", type: "button", text: "取消", on: { click: function () { editing = null; editDraft = ""; renderMsgs(); } } });
     return el("div", { "class": "body edit", style: "white-space:normal" }, [ta, el("div", { "class": "row" }, [save, cancel, st])]);
@@ -425,16 +460,18 @@ var firebaseConfig = {
         ]);
       } else body = el("div", { "class": "body", text: m.priv ? unlocked[m.id] : m.text });
       if (editing === m.id) body = editForm(m);
-      var isMine = !!toks[m.id], acts = [];
+      var acts = [], foot = null;
       if (editing !== m.id) {
-        if (isMine && (!m.priv || unlocked[m.id] != null)) acts.push(el("a", { href: "#board", text: "編輯", on: { click: function (e) { e.preventDefault(); editing = m.id; editDraft = m.priv ? unlocked[m.id] : m.text; renderMsgs(); } } }));
-        if (isMine || ownerCode) {
-          var del = el("a", { href: "#", text: "刪除" });
-          armDelete(del, function () { removeMsg(m.id, isMine); });
-          acts.push(del);
-        }
+        var startEdit = function () { editing = m.id; editDraft = m.priv ? unlocked[m.id] : m.text; renderMsgs(); };
+        if (!m.priv || unlocked[m.id] != null) acts.push(el("a", { href: "#board", text: "編輯", on: { click: function (e) {
+          e.preventDefault();
+          if (authFn("m", m.id)) startEdit(); else askPw(foot, m.id, function (tok) { tmpTok[m.id] = tok; startEdit(); });
+        } } }));
+        var del = el("a", { href: "#", text: "刪除" });
+        armDelete(del, function () { deleteEntry("m", m.id, foot); });
+        acts.push(del);
       }
-      var foot = acts.length ? el("div", { "class": "foot" }, acts) : null;
+      foot = acts.length ? el("div", { "class": "foot" }, acts) : null;
       box.appendChild(el("div", { "class": "msg" }, [
         el("div", { "class": "side" }, [avatarEl(f), el("b", { text: m.name })]),
         el("div", { "class": "main" }, [
@@ -524,8 +561,18 @@ var firebaseConfig = {
     var name = $("#fName").value.trim(), tag = $("#fTag").value.trim();
     if (!db) return setStatus("#fStatus", "資料庫目前無法使用，請稍後再試。", "err");
     if (!name) return setStatus("#fStatus", "請輸入暱稱。", "err");
+    var fpw = $("#fPw").value;
+    if (fpw && fpw.length < 4) return setStatus("#fStatus", "管理密碼至少需要 4 個字元（不想設可以留空）。", "err");
+    if (fpw && (!window.crypto || !crypto.subtle)) return setStatus("#fStatus", "此瀏覽器不支援加密，請先把管理密碼留空。", "err");
     $("#fBtn").disabled = true; setStatus("#fStatus", "送出中…");
-    db.collection("friends").add({ name: name, tag: tag, photo: photo || "", ts: Date.now() }).then(function (ref) {
+    var fref = db.collection("friends").doc();
+    newTok(fref.id, fpw).then(function (tok) {
+      var b = db.batch();
+      b.set(db.doc("fsecrets/" + fref.id), { t: tok });
+      b.set(fref, { name: name, tag: tag, photo: photo || "", ts: Date.now() });
+      toks[fref.id] = tok; saveToks();
+      return b.commit().then(function () { return fref; }, function (err) { delete toks[fref.id]; saveToks(); throw err; });
+    }).then(function (ref) {
       mine.f.push(ref.id); saveMine();
       $("#friendForm").reset(); photo = "";
       resetPrev();
@@ -554,19 +601,25 @@ var firebaseConfig = {
       if (pw !== $("#mPw2").value) return setStatus("#mStatus", "兩次輸入的密碼不一樣。", "err");
       if (!window.crypto || !crypto.subtle) return setStatus("#mStatus", "此瀏覽器不支援加密，無法送出悄悄話。", "err");
     }
+    var apw = $("#mAdminPw").value;
+    if (apw && apw.length < 4) return setStatus("#mStatus", "管理密碼至少需要 4 個字元（不想設可以留空）。", "err");
+    if (apw && (!window.crypto || !crypto.subtle)) return setStatus("#mStatus", "此瀏覽器不支援加密，請先把管理密碼留空。", "err");
     $("#mBtn").disabled = true; setStatus("#mStatus", priv ? "加密並送出中…" : "送出中…");
     var base = { fid: fid, name: f.name, ts: Date.now() };
     var make = priv ? encrypt(text, pw).then(function (x) { return Object.assign(base, { priv: true, hint: $("#mHint").value.trim(), salt: x.salt, iv: x.iv, ct: x.ct }); })
                     : Promise.resolve(Object.assign(base, { priv: false, text: text }));
     make.then(function (doc) {
-      var ref = db.collection("messages").doc(), tok = b64(crypto.getRandomValues(new Uint8Array(24))), b = db.batch();
-      b.set(db.doc("secrets/" + ref.id), { t: tok }); b.set(ref, doc);
-      toks[ref.id] = tok; saveToks(); if (priv) { unlocked[ref.id] = text; pwmem[ref.id] = pw; }
-      return b.commit().then(function () { return ref; }, function (err) { delete toks[ref.id]; saveToks(); throw err; });
+      var ref = db.collection("messages").doc();
+      return newTok(ref.id, apw).then(function (tok) {
+        var b = db.batch();
+        b.set(db.doc("secrets/" + ref.id), { t: tok }); b.set(ref, doc);
+        toks[ref.id] = tok; saveToks(); if (priv) { unlocked[ref.id] = text; pwmem[ref.id] = pw; }
+        return b.commit().then(function () { return ref; }, function (err) { delete toks[ref.id]; saveToks(); throw err; });
+      });
     }).then(function (ref) {
       mine.m.push(ref.id); saveMine();
       if (priv) { unlocked[ref.id] = text; pwmem[ref.id] = pw; }
-      $("#mText").value = ""; $("#mPw").value = $("#mPw2").value = $("#mHint").value = ""; $("#mPriv").checked = false; $("#lockRow").hidden = true;
+      $("#mText").value = ""; $("#mAdminPw").value = ""; $("#mPw").value = $("#mPw2").value = $("#mHint").value = ""; $("#mPriv").checked = false; $("#lockRow").hidden = true;
       $("#mCnt").textContent = "0 / 2000 字"; page = 1;
       setStatus("#mStatus", "留言送出了，謝謝你的祝福！", "ok");
     }).catch(function (err) {
@@ -586,10 +639,10 @@ var firebaseConfig = {
   $("#ownerLoginBtn").addEventListener("click", function () {
     var code = $("#ownerCode").value; if (!code) { $("#ownerSt").textContent = "請輸入主人密碼。"; return; }
     $("#ownerSt").textContent = "確認中…";
-    db.doc("owner/key").set({ code: code }).then(function () { ownerCode = code; $("#ownerCode").value = ""; $("#ownerSt").textContent = "已登入主人模式。"; ownerUI(); })
+    db.doc("owner/key").set({ code: code }).then(function () { ownerCode = code; try { localStorage.setItem("anne-owner", code); } catch (e) {} $("#ownerCode").value = ""; $("#ownerSt").textContent = "已登入主人模式。"; ownerUI(); })
       .catch(function () { $("#ownerSt").textContent = "主人密碼不正確。"; });
   });
-  $("#ownerOut").addEventListener("click", function (e) { e.preventDefault(); ownerCode = ""; $("#ownerSt").textContent = ""; ownerUI(); });
+  $("#ownerOut").addEventListener("click", function (e) { e.preventDefault(); ownerCode = ""; try { localStorage.removeItem("anne-owner"); } catch (e2) {} $("#ownerSt").textContent = "已登出。"; ownerUI(); });
   $("#ownerBtn").addEventListener("click", function () {
     var inp = $("#ownerFile"), file = inp.files && inp.files[0];
     if (!file) { $("#ownerSt").textContent = "請先選擇一張照片。"; return; }
@@ -611,6 +664,11 @@ var firebaseConfig = {
     friends = s.docs.map(function (x) { var o = x.data(); o.id = x.id; return o; });
     renderFriends(); renderMsgs();
   }, fail);
+  try {
+    var saved = localStorage.getItem("anne-owner");
+    if (saved) db.doc("owner/key").set({ code: saved }).then(function () { ownerCode = saved; $("#ownerBox").hidden = false; $("#ownerSt").textContent = "主人模式（已記住此瀏覽器）"; ownerUI(); })
+      .catch(function () { try { localStorage.removeItem("anne-owner"); } catch (e) {} });
+  } catch (e) {}
   db.doc("site/profile").onSnapshot(function (d) { var o = d.exists ? d.data() : null; ownerPhoto = o && o.photo || ""; renderOwner(); }, function () {});
   db.collection("messages").orderBy("ts", "asc").limit(1000).onSnapshot(function (s) {
     msgs = s.docs.map(function (x) { var o = x.data(); o.id = x.id; return o; });
