@@ -344,7 +344,7 @@ var firebaseConfig = {
       var b = db.batch(); authFn(kind, id)(b);
       b.delete(db.doc((kind === "m" ? "messages/" : "friends/") + id));
       b.commit().then(function () { delete toks[id]; delete tmpTok[id]; saveToks(); })
-        .catch(function () { delete tmpTok[id]; showErr(slot, "密碼不正確，或沒有權限刪除。"); });
+        .catch(function (err) { console.error(err); delete tmpTok[id]; showErr(slot, "刪除失敗（" + ((err && err.code) || "未知") + "）：" + (ownerCode ? "請確認 Firestore 規則已更新並發布。" : "管理密碼不正確，或沒有權限。")); });
     };
     if (authFn(kind, id)) go(); else askPw(slot, id, function (tok) { tmpTok[id] = tok; go(); });
   }
@@ -430,7 +430,7 @@ var firebaseConfig = {
           if (tmpTok[m.id]) { toks[m.id] = tmpTok[m.id]; delete tmpTok[m.id]; saveToks(); }
           if (m.priv) unlocked[m.id] = t; editing = null; editDraft = ""; renderMsgs();
         });
-      }).catch(function () { delete tmpTok[m.id]; save.disabled = false; st.className = "status err"; st.textContent = "儲存失敗：管理密碼不正確，或沒有權限。"; });
+      }).catch(function (err) { console.error(err); delete tmpTok[m.id]; save.disabled = false; st.className = "status err"; st.textContent = "儲存失敗：" + (ownerCode ? "請確認 Firestore 規則已更新並發布。" : "管理密碼不正確，或沒有權限。"); });
     });
     var cancel = el("button", { "class": "btn s", type: "button", text: "取消", on: { click: function () { editing = null; editDraft = ""; renderMsgs(); } } });
     return el("div", { "class": "body edit", style: "white-space:normal" }, [ta, el("div", { "class": "row" }, [save, cancel, st])]);
@@ -640,7 +640,7 @@ var firebaseConfig = {
     var code = $("#ownerCode").value; if (!code) { $("#ownerSt").textContent = "請輸入主人密碼。"; return; }
     $("#ownerSt").textContent = "確認中…";
     db.doc("owner/key").set({ code: code }).then(function () { ownerCode = code; try { localStorage.setItem("anne-owner", code); } catch (e) {} $("#ownerCode").value = ""; $("#ownerSt").textContent = "已登入主人模式。"; ownerUI(); })
-      .catch(function () { $("#ownerSt").textContent = "主人密碼不正確。"; });
+      .catch(function (err) { console.error(err); $("#ownerSt").textContent = "登入失敗（" + ((err && err.code) || "未知") + "）：主人密碼與規則裡的不一樣，或規則尚未發布。"; });
   });
   $("#ownerOut").addEventListener("click", function (e) { e.preventDefault(); ownerCode = ""; try { localStorage.removeItem("anne-owner"); } catch (e2) {} $("#ownerSt").textContent = "已登出。"; ownerUI(); });
   $("#ownerBtn").addEventListener("click", function () {
