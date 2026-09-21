@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>李蓓雯的小站</title>
+<style>
+:root{
+  --bg:#c9def5; --bg2:#dcebfa; --frame:#ffffff; --line:#6b9bd2; --line-soft:#b9d1ee;
+  --ink:#222222; --mute:#66707c; --link:#0044bb; --link-hover:#e0387f;
+  --pink:#e8548f; --pink-soft:#ffe3ee; --blue:#3f7fd0; --blue-top:#7fb0ea; --box:#f4f9ff;
+  --warn:#c22222; --ok:#1c7a2e;
+  --font:"Microsoft JhengHei","PingFang TC","Noto Sans TC","Heiti TC",sans-serif;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; padding-inline:16px; padding-block:14px 30px;
+  background-color:var(--bg);
+  background-image:radial-gradient(var(--bg2) 1.2px,transparent 1.4px);
+  background-size:8px 8px;
+  color:var(--ink); font:13px/1.65 var(--font);
+}
+a{color:var(--link);text-decoration:none}
+a:hover{color:var(--link-hover);text-decoration:underline}
+button,input,select,textarea{font:inherit;color:var(--ink)}
+:focus-visible{outline:2px dotted var(--pink);outline-offset:2px}
+
+.wrap{max-width:900px;margin:0 auto;background:var(--frame);border:1px solid var(--line);box-shadow:3px 3px 0 var(--line-soft)}
+
+/* banner */
+.banner{
+  position:relative;overflow:hidden;padding:18px 20px 12px;
+  background:linear-gradient(100deg,#9fc7f2 0%,#d9e9fb 45%,#ffd3e4 100%);
+  border-bottom:2px solid var(--line);
+}
+.banner h1{margin:0;font-size:30px;line-height:1.25;letter-spacing:2px;color:#fff;
+  text-shadow:2px 2px 0 var(--blue),-1px -1px 0 var(--blue),1px -1px 0 var(--blue),-1px 1px 0 var(--blue)}
+.banner h1 small{font-size:14px;letter-spacing:1px;text-shadow:none;color:var(--blue);margin-left:6px}
+.banner .sub{margin:2px 0 8px;color:#35619a;font-size:12px}
+.ticker{background:var(--frame);border:1px dashed var(--pink);padding:2px 0;overflow:hidden;white-space:nowrap;color:var(--pink);font-weight:bold}
+.ticker span{display:inline-block;padding-left:100%;animation:tick 22s linear infinite}
+@keyframes tick{to{transform:translateX(-100%)}}
+.spark{position:absolute;right:16px;top:10px;font-size:22px;color:#fff;text-shadow:1px 1px 0 var(--pink);animation:blink 1.4s steps(2) infinite}
+.spark.b{right:56px;top:42px;font-size:15px;animation-delay:.6s}
+@keyframes blink{50%{opacity:.25}}
+
+/* layout */
+.cols{display:grid;grid-template-columns:200px minmax(0,1fr);gap:14px;padding:14px}
+@media (max-width:720px){.cols{grid-template-columns:1fr}.banner h1{font-size:24px}}
+
+/* boxes */
+.box{border:1px solid var(--line);background:var(--box);margin-bottom:12px}
+.box>.t{background:linear-gradient(var(--blue-top),var(--blue));color:#fff;font-weight:bold;padding:2px 8px;font-size:13px;letter-spacing:1px;border-bottom:1px solid var(--line)}
+.box>.b{padding:8px 10px}
+.avatar{display:block;width:100%;max-width:176px;aspect-ratio:1;margin:0 auto 6px;border:1px solid var(--line);padding:3px;background:#fff}
+.avatar img{display:block;width:100%;height:100%;object-fit:cover}
+.who{text-align:center;font-weight:bold;color:var(--pink);font-size:15px;margin:0}
+.who small{display:block;color:var(--mute);font-weight:normal;font-size:12px}
+dl.info{margin:6px 0 0;display:grid;grid-template-columns:auto 1fr;gap:1px 8px;font-size:12px}
+dl.info dt{color:var(--mute)} dl.info dd{margin:0}
+.menu{list-style:none;margin:0;padding:0}
+.menu li{border-bottom:1px dotted var(--line-soft)}
+.menu li:last-child{border:0}
+.menu a{display:block;padding:4px 6px;color:var(--link)}
+.menu a::before{content:"▶ ";font-size:10px;color:var(--blue)}
+.menu a.on{background:var(--pink-soft);color:var(--pink);font-weight:bold}
+.menu a.on::before{color:var(--pink)}
+.menu a:hover{background:var(--pink-soft);text-decoration:none}
+.new{color:#fff;background:var(--pink);font-size:10px;padding:0 3px;margin-left:4px;font-weight:bold;animation:blink 1s steps(2) infinite}
+
+.tbeige{background:#f9e4d0;color:#7a4a25;text-align:center;font-size:15px;letter-spacing:2px;padding:3px 6px;margin:0 0 8px;font-weight:bold}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.mini a{display:block;border:1px solid var(--line-soft);background:#fff;padding:1px;aspect-ratio:1}
+.mini img{display:block;width:100%;height:100%;object-fit:cover}
+.nine{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 6px}
+.nine .fc{padding:8px}
+.nine .fc img{width:100%;height:auto;aspect-ratio:1;max-width:170px}
+.ownerop{text-align:center;margin-top:4px;font-size:12px}
+.ownerop input{margin-top:4px;font-size:11px}
+/* main */
+.pane[hidden]{display:none}
+.h2{margin:0 0 8px;font-size:16px;color:var(--blue);border-bottom:2px solid var(--blue);padding-bottom:3px}
+.h2 em{font-style:normal;color:var(--pink);font-size:12px;margin-left:8px;font-weight:normal}
+.hint{background:#fffbe0;border:1px dashed #d8c24a;padding:5px 9px;margin:0 0 10px;font-size:12px}
+
+.friends{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;margin:0 0 14px;padding:0;list-style:none}
+.fc{border:1px solid var(--line-soft);background:#fff;padding:6px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.fc img{width:96px;height:96px;object-fit:cover;border:1px solid var(--line);padding:2px;background:#fff;display:block}
+.fc b{color:var(--link);max-width:100%;overflow-wrap:anywhere}
+.fc .tag{font-size:12px;color:var(--mute);max-width:100%;overflow-wrap:anywhere;min-height:1.65em}
+.fc .ops{font-size:11px;display:flex;gap:8px;margin-top:auto}
+.fc .date{font-size:11px;color:#98a3b0}
+.empty{padding:22px 10px;text-align:center;color:var(--mute);border:1px dashed var(--line-soft);background:#fff;margin-bottom:14px}
+
+form.f{border:1px solid var(--line);background:var(--box)}
+form.f>.t{background:linear-gradient(var(--blue-top),var(--blue));color:#fff;font-weight:bold;padding:2px 8px;letter-spacing:1px}
+.frow{display:grid;grid-template-columns:96px minmax(0,1fr);gap:8px;padding:5px 10px;align-items:start}
+@media (max-width:520px){.frow{grid-template-columns:1fr;gap:2px}}
+.frow>label,.frow>.lab{font-weight:bold;color:var(--blue);padding-top:3px}
+.req{color:var(--warn)}
+input[type=text],input[type=password],select,textarea{width:100%;border:1px solid var(--line);background:#fff;padding:3px 5px;border-radius:0}
+textarea{min-height:170px;resize:vertical;line-height:1.7}
+.pv{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pv img,.pv .ph{width:96px;height:96px;object-fit:cover;border:1px solid var(--line);padding:2px;background:#fff;display:block}
+.pv .ph{display:flex;align-items:center;justify-content:center;color:#a3b3c6;font-size:12px;text-align:center}
+.small{font-size:12px;color:var(--mute)}
+.cnt{text-align:right;font-size:12px;color:var(--mute)} .cnt.over{color:var(--warn);font-weight:bold}
+.lockrow{background:#fff7d6;border:1px dashed #d8c24a;margin:4px 10px;padding:6px 8px}
+.lockrow .frow{padding:3px 0}
+.btnrow{padding:8px 10px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--blue);background:linear-gradient(#fff,#d7e7fa);padding:3px 16px;cursor:pointer;color:var(--blue);font-weight:bold}
+.btn:hover{background:linear-gradient(#fff,var(--pink-soft));border-color:var(--pink);color:var(--pink)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.s{padding:1px 8px;font-size:12px}
+.status{font-size:12px}.status.err{color:var(--warn)}.status.ok{color:var(--ok)}
+
+/* messages */
+.msg{display:grid;grid-template-columns:110px minmax(0,1fr);border:1px solid var(--line-soft);margin-bottom:10px;background:#fff}
+@media (max-width:520px){.msg{grid-template-columns:1fr}}
+.msg .side{background:var(--box);border-right:1px solid var(--line-soft);padding:8px 6px;text-align:center;min-width:0}
+@media (max-width:520px){.msg .side{border-right:0;border-bottom:1px solid var(--line-soft);display:flex;gap:8px;align-items:center;text-align:left}}
+.msg .side img,.msg .side .ph{width:72px;height:72px;object-fit:cover;border:1px solid var(--line);padding:2px;background:#fff;display:block;margin:0 auto 4px;flex:none}
+@media (max-width:520px){.msg .side img,.msg .side .ph{margin:0}}
+.msg .side .ph{display:flex;align-items:center;justify-content:center;color:#a3b3c6;font-size:11px}
+.msg .side b{color:var(--link);overflow-wrap:anywhere}
+.msg .main{min-width:0;display:flex;flex-direction:column}
+.msg .head{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;background:var(--pink-soft);border-bottom:1px dotted var(--pink);padding:2px 10px;font-size:12px;color:#a04068}
+.msg .body{padding:8px 12px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85;flex:1}
+.msg .foot{padding:2px 10px 4px;text-align:right;font-size:11px}
+.lock{padding:12px;text-align:center;background:repeating-linear-gradient(45deg,#fff,#fff 8px,#f6f6f6 8px,#f6f6f6 16px)}
+.lock .row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.lock input{width:150px}
+.pager{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0 14px;font-size:12px}
+.pager a,.pager b{border:1px solid var(--line-soft);padding:0 7px;background:#fff}
+.pager b{background:var(--pink);border-color:var(--pink);color:#fff}
+
+.foot-note{border-top:2px solid var(--line);background:var(--bg2);text-align:center;padding:8px;font-size:11px;color:var(--mute)}
+@media (prefers-reduced-motion:reduce){.ticker span,.spark,.new{animation:none}.ticker span{padding-left:0}}
+[hidden]{display:none!important}img{max-width:100%}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="banner">
+    <span class="spark" aria-hidden="true">★</span><span class="spark b" aria-hidden="true">☆</span>
+    <h1>李蓓雯 ♥ 的小站<small>Anne Lee's Blog</small></h1>
+    <p class="sub">~ 生日快樂！同事們的祝福都在這裡 ~ (*´∀`)~♥</p>
+    <div class="ticker"><span>★☆★☆↗數位平台部↙ 李蓓雯同學生日大快樂！！★☆</span></div>
+  </div>
+
+  <div class="cols">
+    <aside>
+      <div class="box">
+        <div class="t">小站主人</div>
+        <div class="b">
+          <div class="avatar"><img id="ownerImg" alt="李蓓雯的大頭貼" width="176" height="176"></div>
+          <div class="ownerop" id="ownerOp"><a href="#" id="ownerToggle">小站主人登入</a>
+            <div id="ownerBox" hidden>
+              <input type="password" id="ownerCode" placeholder="主人密碼" autocomplete="off" aria-label="主人密碼">
+              <input type="file" id="ownerFile" accept="image/*">
+              <button class="btn s" type="button" id="ownerBtn">更新大頭貼</button>
+            </div>
+            <div class="small" id="ownerSt" role="status"></div></div>
+          <p class="who">李蓓雯<small>Anne Lee</small></p>
+          <dl class="info">
+            <dt>好友</dt><dd><span id="nFriends">0</span> 人</dd>
+            <dt>留言</dt><dd><span id="nMsgs">0</span> 篇</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="box">
+        <div class="t">功能選單</div>
+        <div class="b">
+          <ul class="menu">
+            <li><a href="#friends" id="m-friends">好友</a></li>
+            <li><a href="#board" id="m-board">留言板<span class="new">NEW</span></a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="box">
+        <div class="b"><div class="tbeige">誰來我家</div><div class="mini" id="mini"></div></div>
+      </div>
+      <div class="box">
+        <div class="t">小提醒</div>
+        <div class="b small">① 先到「好友」加入（記得上傳大頭貼）<br>② 再到「留言板」寫祝福<br>③ 想說悄悄話就勾選「設密碼」</div>
+      </div>
+    </aside>
+
+    <main>
+      <!-- 好友 -->
+      <section class="pane" id="p-friends">
+        <h2 class="h2">好友<em>共 <span id="nFriends2">0</span> 位好友</em></h2>
+        <div id="friendList"></div>
+
+        <form class="f" id="friendForm" autocomplete="off">
+          <div class="t">加入好友</div>
+          <div class="frow"><label for="fName">暱稱 <span class="req">*</span></label><div><input type="text" id="fName" maxlength="12" placeholder="請輸入你的名字或暱稱（最多 12 字）"></div></div>
+          <div class="frow"><label for="fTag">一句話</label><div><input type="text" id="fTag" maxlength="30" placeholder="想對大家說的話（選填，最多 30 字）"></div></div>
+          <div class="frow"><span class="lab">大頭貼</span>
+            <div>
+              <div class="pv"><div id="fPrev"></div>
+                <div><input type="file" id="fFile" accept="image/*"><div class="small">請選擇一張你的照片，系統會自動裁成正方形。沒上傳的話會顯示「我沒設大頭貼」。</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="btnrow"><button class="btn" type="submit" id="fBtn">加入好友</button><span class="status" id="fStatus" role="status"></span></div>
+        </form>
+      </section>
+
+      <!-- 留言板 -->
+      <section class="pane" id="p-board" hidden>
+        <h2 class="h2">留言板<em>共 <span id="nMsgs2">0</span> 篇留言</em></h2>
+
+        <form class="f" id="msgForm" autocomplete="off" style="margin-bottom:14px">
+          <div class="t">寫下你的祝福</div>
+          <div class="frow"><label for="mWho">我是 <span class="req">*</span></label>
+            <div><select id="mWho"></select><div class="small" id="mWhoHint"></div></div></div>
+          <div class="frow"><label for="mText">留言 <span class="req">*</span></label>
+            <div><textarea id="mText" maxlength="2000" placeholder="蓓雯生日快樂！（最多 2000 字，請使用繁體中文）"></textarea>
+            <div class="cnt" id="mCnt">0 / 2000 字</div></div></div>
+          <div class="frow"><span class="lab">悄悄話</span>
+            <div><label><input type="checkbox" id="mPriv"> 設密碼，只有知道密碼的人才看得到內容</label></div></div>
+          <div class="lockrow" id="lockRow" hidden>
+            <div class="frow"><label for="mPw">密碼 <span class="req">*</span></label><div><input type="password" id="mPw" maxlength="40" autocomplete="new-password" placeholder="至少 4 個字元"></div></div>
+            <div class="frow"><label for="mPw2">確認密碼</label><div><input type="password" id="mPw2" maxlength="40" autocomplete="new-password"></div></div>
+            <div class="frow"><label for="mHint">密碼提示</label><div><input type="text" id="mHint" maxlength="30" placeholder="選填，會公開顯示，例如「我們的暗號」"></div></div>
+            <div class="small">內容會在你的瀏覽器加密後才送出，忘記密碼就無法找回；請記得把密碼告訴蓓雯喔！</div>
+          </div>
+          <div class="btnrow"><button class="btn" type="submit" id="mBtn">送出留言</button><span class="status" id="mStatus" role="status"></span></div>
+        </form>
+
+        <div id="msgList"></div>
+        <div class="pager" id="pager"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="foot-note">© 2026 李蓓雯的小站 All Rights Reserved　‧　建議使用 1024×768 解析度、Internet Explorer 6.0 瀏覽　‧　(^o^)/</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+var firebaseConfig = {
+  apiKey: "AIzaSyALpACVpNDOCw-_iFNylv1CU_ngtwI9TNc",
+  authDomain: "birthday-for-anne.firebaseapp.com",
+  projectId: "birthday-for-anne",
+  storageBucket: "birthday-for-anne.firebasestorage.app",
+  messagingSenderId: "253769072443",
+  appId: "1:253769072443:web:24cfc39a98d6b9391b011e"
+};
+</script>
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var db = null, friends = [], msgs = [], page = 1, PER = 8, fpage = 1, FPER = 9, ownerPhoto = "";
+  var DEF = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBAUEBAYFBQUGBgYHCQ4JCQgICRINDQoOFRIWFhUSFBQXGiEcFxgfGRQUHScdHyIjJSUlFhwpLCgkKyEkJST/2wBDAQYGBgkICREJCREkGBQYJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCT/wAARCACgAKADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD00E4zngetWbTTr2+BNvbu4HcDirGhaM+sXDp5ojijGWPf8K7vTbBNNtUgRnZV6FqAPNpoZreTyplMb9wwximZPqPyr1OW2gmUiSNG3cEsuSa851q0+xajLGIjEhbKL6igCnz6j8qMH1H5UZxzWTrnijSvDse7ULtIn7RdXf2AFAGqSR3H5UFtq7iwA7nFeX3PxQ1fX70WHhfSZJJWPy5QyO3vgcL9TW1YfBn4heLCs3iDWRpkLcmNnLuB6BVwKAOquNb020z5+o2sRHZpFB/nVFvGvh5Tg6zZ59mrR0z9mjwzCFOp6jqF/IOpDiMH8BWsP2evAYUA2Fzkd/tLZoA52PxZoM2Ams2RJ7FwK0Iry3uBmG5hkB6FGBz+Rqxffs3+CbmP/Rl1C2c9GWfcPrgiuQ1n9mvVbFmk8OeIN+OViuMxsf8AgQOKAO90XSn1G8jWWKRoCcswXjH1r0C0gjhjCRw+WijAUjrXzM3iT4tfCrbHfpPcWMY63CefCR7OORXd+D/2lNB1Ty4NetpNInJ2mX78JPrkcr+NAHrN/Y212BHPbrIp9uleearF4x+1Tx2EVnp1qrbYWUAsw9ea9HtbuC/gjubWdJoJBuSSNsqw9QR1rznxpYaRJqhIv7+3kB/epDC0iZ9fQGsqlKVRWi7GlKu6MuZR5jIntPHsSmV9XuQo6lUBH6CsxvF3izSyResmoW/8QlQHj6jkVoWls6S50jxIpm/hhnZonP0zwfpV46jFczmw8QWhsr4Das6pwfdh0I9xXnV8NiaPvQlc9HD5zQb5MTSSTF0nUbDxLbGbTgYLpeZbN+o9SvqKc+VDKSdwP6+9YWraLcaDfR39oGhuoT5qNH9yZR+hHtXT3skN9aWmqW42xXsYc+z9/wBa3wOMdVck1Zk5hhIU7VaL91jNP1CfTZhNA2DjBHY/WthvF0zL/wAekZPqZGI/KufXpR3rvPMOkj8a3WzDWkHHT5jVa58VSXQJuNPtJQP7w5//AFVinp71518SvHhsEfR9NlIuSCLiVP8AlmCPuj3NAFv4h/FW3sbl7PRbe3N5go7xjMcf+Jqn4C+CWseOZF1vxJd3FtYzHOG5nmHtn7orc+C/wYS4WHxL4jtjg4eztJP/AENh39ga+gIkCjaFAA4AAwBQBkeG/CGi+FLJLTR7CK2jUcso+Zz6sepra20uMUUAIBiloJxTDJj0oAfSEZNIrZp2aAIp7aK4ieKVFkjcFWRhkMD2IrxX4ifs86ffpNqHh1/sN22WMR5hY9+O34V7cDmkddwxQB8ceGfHHi34Raw9nIJGgibbNYTk+W3+0vp9RXtWg/EceLLc31he5J/1lsyj90fTbW98S/hfpfjTTn3RiO7jG6OZRyh/qPavmIf258M/FB3qY54jhlP3J0J6/Q/pQC0Po+aXS9TGzUtPhVjx50A2sPfFQ3titlaLFfzNqOjOcR3I/wBbZn1PtWN4d1608SabHqFoxAI2vGxGUbuDXZeFrVZ4bh5yq2bDypEbo5PSrU3azCVpK0kUNF0q6uTcaJdMZrbyxNbXYOVA7Eex9K6W18IwQaFFpSuSITuWQjnJPNXtF0pNNRbaKILBHu8smTcQCen0rVYbRxXNHDwjNzjuVGclD2d9DydelFC9KPyH1rYkxPGXiNPDOhTXuQZz8kK/3nPT8utcN8GvAjeP/FE2p6mHbTrJ1ll3f8t5Schc+nc1m/FjWXv/ABAunxMSlmuCo6M7V9HfCzwqnhLwTp1jsxPJGJ7j3kcZOfpwKAOujQR9AAB2p+6uf8ZeOdH8EaUdQ1eZlVjtiiQZklb0Ud68pP7TiSXSrB4XupI3YBP3wEjg9MDHNAHu4OaWsfw1rx8QaTDqDade6e0mc292myRce3pWwDmgBr9K+d/j147v9S8RW3hHQrmdGgdTL9ncq0s5+6mR2H86+iGXcR0rzPRfghaaV4+fxbNqct6S8ky28qD5ZW757gdqAOs8CaXqWh+F7Cx1e9kvb6OPM00jZJY84z6Dp+FYnxA+Lej/AA+v7Kyvobi4lulLkQEZiTONxz1+ldyVwMGvlvx54Z8ReM/jBLa3emXiRT3KwRP5Z8sWy9WDdPWgD6T0DW7fxDpdrqln5n2e6UPH5iFCR64NatVrKzjsraG3hRFihUIgUYAAGBVmgBCAeteOfGTwEniGwmNtGqXtoDPAwHLr1ZT7f1r2Suc8Tw4eGcDqCh+lAHyp8M/EbaBrotZ222t3+7cH+F+xr6L0DUIrYTWtzJtinwwfGdjDpXzx8U/D6+HvFs/2cGOC7H2iLAxtJPIH0NeqeCtWOs+HLS5ZsyBNkmT/ABDj9cUAe0WN2syK5kiJx/AwINWnYEda8pR3iIZTtI5BDEc13Nh4nspbTMzmOVVyyHufUUAcKo+WkdhEjO33VGT9BzSr0qtqrFdLvCCQRA5/8dNAHifhm2bxd8SdPil+ZbnUBI+e6Bs/yFfZqIqrgcD0r5B+CmG+KOhhsEBpDz/umvsBelAGJ4m8H6H4sgSHWrGK6SM5TdwU9cGvn7wXp1v4y+N0s0UKJp2mSPJFGi4REiO1AB9a+l7sE20oUZbYcD3xXzt+zqfK8da7FOdsphbK+/mnNAH0WiKyckkGpAMU1BhcU6gAooooAaUz1NJ5S/j0HtT6KAADAxRRRnFABWV4giMlgSoztYH8K1ap6rj+z5wMfdoA8A+PGniTRNPvlQFre42M3orDgfmKyPgzeFrC/sWbJjkDj6Guw+MEQm8B3xP8Dxvn0+avPvgwT/aOo/8AXFc/99UAes59QDTW7kcH1FOprfdP4UAKvSoL9DNZXMQ6vEwH5Gp1Hy0EYH60AeHfCu6TTPiTokk/yhbkxMfTdlf519lIRjAGK+JvFlpL4c8YXBiLKYZhcREHtncP1r7B8I64niTw5puqxsCLmBHOOzY5H50Aa7nAzXzh4gc/Cv42xaoIiNO1Bt5I+7sfh/xDV9IkZFcL8Wvh9F478NNBFiPUrXMtpLj+Lup9jQB20MqvCrqQVYZBB6ipa8d+CHxDn1CF/CWuhoNY08eXGsvDSIvUH/aFewq2aAFooooAKKKKACszxHqc+j6RPfW2n3GoSwruW3g++/0rTqKZgFBPAHJPpQB5zovx08L6hdfYdRN5o16CFeK/i2BW9C3QV2mrXcb6UZYXWRJcbXU5DD2NfOl1p9j8Sfjpc2qwrdaaZiJiM4eNFwWz9eletab4Xs/BVo2j6fe31zaCTzFW6l3+Rn+FT6e1AHHfGi6Fv4HliLYNxNHH9RnJ/lXHfBW2IOqXQGfux5P51a+POsI8+m6Qrg+WpuZF+owP0ya1/hfpLaX4WjeUbXu2M59cdB+lAHXikf7p/ClFI/3T+FACL0FLjPFQXN7bWSb7mVYgBnms8eLtGzg3RA9ShoA434waA88EOtQxkmIeVNgdATwf8+tdN+zn48jWOTwnfSgNuMlmex7sn171tSC01izlhDJcW8qFWAOQQR3FeG+IdG1DwH4hjktZWQI4ntJxxwD/ADHSgD7TVwcDuRmh03EH0rifhh8RrTx7oaT5ji1C3Gy6hzyD/eHsa7dWzQB5X8UfhPc69eReJPDEy2XiC3Icsp2CfHv2b+dReC/jKv2xPD/jeBtF1uNdpkmGyGbHfJ6E/lXrRANYXibwRoPi638nWtOgvABhXZcOn0bqKANmG4jnjWSKRZEYZDKcg/QinBgTjPNeRP8AB7xF4XkabwN4yu7KLORZX372L6A9vyofX/jTph8qTw5pGpAcCWCQDPuRnigD1/cM4zSFwDivHD43+MaqP+KCtCf+uw/xpjeI/jbfZWDwrp1oD1ZnBx+ZoA9jlmSONnd1VQMlicAfjXhXxP8Ai7c63ct4O8Fh7q6uf3Ut1Ac5J6rGf5t060r/AAt+JPjZivizxSLG2Y/8e8B3cfRcD869C8EfC/w/8PoXlso2lu2UeZdzYLkDsPQfSgDH+Gfw8t/hror3V46zaveKPNdeVj/6ZqfQdz3q3qepwafaXWo3snlpErSyP9P8a0dRv2vrpmBAiTO3J4x6mvBfiz4+/t2YaDpbs1pE4EsiciaQHAUeoBoA5dnu/iL41eVlJN5ISf8ApnCP6Yr3eCKO3hSCNQqRKEUDsAMCuC8Iada+B9L+0XxU6rdqC8Y6ovXb7Vo/8Jhf3EgW1s0IY4UAFjQB1+eAfWkb7p/CuYHiLWrU773TiI+7KpGBW9Y6hb6nbGa3fK8ZU9V+tAGBq9ulz4ngjvGP2ZlBUE4DH0rT1Gaz0WGNjYI8DHazoq/L6dauX2n2+pQeTcLlSOCOoPtWOPB8bSJ519cSwqQwifpmgA1DTvsgXWNIYpgb3iPCuv0qbUdLsPGmjLHcJhJF3RuB80Tj0qXXNTttM0+SAOpkdNiJ3A/piua0jxBe6dZpbW9sJcEkcEk0AcM8HiL4ZeIIry1laB0OYpkPyTDuCO4PcV9FfDn4waN44gS2llSw1cD95ayNjefVD3Ht1rhItXsPECnTNXsApkU4WTox9j1FcZ4i+E95Ys15oMxmVfnWLOJI+eqnvQB9ZIcryMGnV8z+Dfjv4g8JyppHimymvYIvlDv8txGPx+/XuXhXx54e8X26TaTqEMjEfNAxCyp7FTzQB0pQN1FGxfQUgcYzz+VOoATaPSk2L6CnE4pplUAkngdT2FACMFVSfTmuV8SeIYIbaUvcRwWsQy8znAP0rkviH8Y9C0KWS0huBfXMZ5gt3Byf9pugryK5h8XfE+8FxMGtdNLfJG2REg9VH8RoAueP/inP4iJ0Pw6kq28hKPIud83svotWvBnw8/sa3OsapGr3ccRaGA8iI44J9TXR+F/Aul+GEEsafaLzHNxKvzH2A7CuhdRIjIw4YYP40AeeaPYTa5qRMshw3zSOeTiuvvnTRreC3so44mmcRqxHCmsbS0bw5r0tvcf6mcYWU9CO1dTcW0N1EY5UWRT2PI+tADoo3a3Md0VlbGHIX5SK5jwrbMmq3zxH/R1JXA6deK2W0KFgU+03gjPVBKcVbt7SKytxDAgSNegFAEwHAqrq2of2bp8lyANy8L9a5f8A4Wz4Z6ebd5/64Gs/X/iP4f1PTjbQy3HmFww3RECgC5omktrVw99el2iByQP4z6fStbw7rEcslypS3tYozhVGFb865/R/iV4d0/TI7eSScOg+bbGTnmoLzxh4HvJmnY3qOepSIjNAGv4ruIbm/tUtpVklXglOec8c1S8X+PLmyuotC0SH7RqTBEZ8Z2sf4QP71QWXjvwVp2ZLZbszKCQ0kJzn86s/s96fZ67431XVdQAe6t4xNbhzzudiGbHfAx9KANXwr8DLvU5hqPiueS/uGGTAxIVCfVupP04pde8FfCvwxfbbnxB/ZV+n3vskzb0PbJXofrXtWt295daPewadOsF88DJDK3RHxwa+adI8M6l4B1Se58UeALvX5iSUnDF4h6njrk+tAHqvhb4qeB9Ig+yy+PptSVRhWvlO5f8AgQAz+NdzpXjvw1rKA6frdhcZ6bZgCfwNeDXuua34jiaHSfhZpNpG3HmXMGSP5VR0z4CeKdbuhNffYNNVjlRCmdn0AoA+jb3xf4fsTtu9a0+BgejzqDXJ+JJPA/i/KXXi0rGfvQ22obEf6gda5rR/gF4M0OIzeIr5dQlU5LTy+WgHpjOaZf8Ahr4H22RJDpbMvH7q5PH60Aa1v8FfCF1YtHZ2On3EDjCzK5d/ruB6151fJrvwg1aPT9WDXug3Dk28458sdxnsR6flWjqGifDzS7KfU/CPju70K6iUukMN0ZFZhyF2nrmrHhjxFqvxZ+HfiTS9cijuJrGDzIL3Zjc4GcHtkY7UAdJb3EV1Ak8Lh45FDKwOcg1IRng15L8P/iFZaHo72GrSTAI+6DYm75D1H4GuoPxZ8M84lus/9caANzxPZrc6PMdozEA4PfinaXqccej2097MiEp1J/KuF1v4lWOphoIZmitz22nLD3qrp/ifwuux9RubuUgYSNYztX9aAPSodb06dgkd3EzHoM4q65GMDn3rzOLxx4TaV1uLMrBnaCkbb/r1q1pXxM0KxEtvLc3UtqD+4fyiXAPqKAPI8MWwoJb+dW10q/a2N0LSfychTJt4yfrXa+Dkv1063aPR7VoixP2gsA+M1c8RafruoalEtuyf2arIxXcAWIOTXzlfOZQrOmkrI53Vs7I8/utKv7R5I5rOZHiUO/y52g9CcVDBa3F07JbxPKyjJ2DPFeo3dvqi+IBdQQLNZyQiKeMuBuxmuU0e21ix1zUZNJhSMQvh4nYHKf3RV0M3lVg5dSlVuczbWdxfXKW0ELNK5wqkYyauaZf6t4V1UXlhLNY31sxAfB+U9wfUH0rs9NaOe/u/EV7aLZfZ1MXlHru7lvc9qNE1zW9fzNBaaf5aybTv+9UvOKl3aOn6k+1O18P/ALTKCCODWdCkM4wGktHHzn12npn0reuf2idMSFhD4Z1ySQAkB4dq/nXjXi9bI+J9PUN5T4Xzjbj5t2eOBXRyXBaNlfUdZKkEH9x2/KnUzecYxbjuN1maOo/tC+I9RAfRfDltAo4LlDKR+mK4TXviZ411mUjUtZvbfH/LGH9yoz7CtaK8k8NeGbIRHZJdXOVVhyVJ6n3xS+NdBiuUuNYmlKMluqxDPDtTpZvJ1Epx0YKq3ocHLeXFzKJLmea4OefNmY5/Wuw8PXvhZrJ7rUfA0kttCQJbq3mZlH1BqXRfhxp+p6XbXj+IYInlQOY/lGw+hya7TTPB9vY+E9Q0WPUknhvN26cYwv5HHapxvEFGg0o73O2NK61M06t8HriEZsQpHOxYHDA/UVN4l+Kun/8ACKP4Z8B6RPFA6mOa5SArhT1AA5yfU1hv8LNNVMDxPbgAd9uP51D8PYr+E6sLPW4bWztHCyTPHvEnXn2GBW0s6puk5w3Qey1scQmjaizpEljdF3OFUxMM/nVoeFddP/MJvB7GM16Zqa61fHSprPxRHPbz3YiEsEIypweQe9aj6zaaek+m3HiS6e9DhfNeIb4yewwMGvOqZ5XSTSV/maewR4nd6deWEyw3VrNDKwyEZTkimmzu1yTaXAAGeYyK9Cv7a7tvihpNvfX76jwro8ygEKQ3HAxnIruIHkk1a8gfVrS6iwdtosYEkX+8a0q57Kmo6bq5Ko3PB7Sxu9RZks7eWZ0XcyouSo9TVU/QjtzXovwj+XV9WBLANDyc4P3zWN4rs/CkFqDot3dTXrTEOjZ2qMnPX3rtoZtKeIdBxI5LK5P4TsLZ4LWeTXTDJv8A+Pbdx16HmtLxl9jjlmkbVbi3vVQGO3jY7SR0496wfCtz4dt183Uw0V1E/mpIclT7YFXrzxZpK63c6j9ia8kCKkD8AAgcnBrycRhqksU5JXOCUHzXOiv1tmgtNYvp5IoI4ADEGK72I4/GuD0We6ufEoGlzSW8k8xYFjv+Xr8w78VvWfi3T9ZhmtfESrEu8MhQHH6dKj0nXdCt/Ed3fKFtoFiEcXy/ePc+2eKeGpVaMZKUNQjFpM1tJgEl/q1pqCWt5eI6uW6K4xwMHpUli0EmoGzXw0bZgfnkOAo9wR1rA0S60F7qfWdSvnS8aYlY1JBx24HWtWP4iabPO8EtvMLdvlEmckj37iuOrh6rk+WLa6+RnKDvdGL4mhsf+EntIdNjBfIEnkHGWz2J6Gutmt7rypAItVLBScfah6Vx16+g6XrVjeaZdtPF5gklTk7Bn/PFb0fijw/Dqk+prf3LPImPJKHYPpXTWo1ZRgknoaOLaViKMW8mjWdxPoMt4v3MrLuZW6dKr+N7Wxs9KtkSJ7e6dg3leYWGMc5/TFS2HinRdA08NayXNzcTne0eT8mT79KzvFF94f1m1N/BdyJqAAHktk7v/wBVLDUairxcotRXUIRalqc7pumz6vqEVpZQtJPI2MY7dyfava9OOi+Gray8KzzgT3ERBB6Et1z6Z5xXIaJ4s8N+EfDfmaYouNXmjHmB15D+pP8Ad9q4S+1K71K+k1C6uHkuJSGL56fT0x2rqxODq5hUenLFbebPSjNQWu5peLPC114Z1J4JFZrdzmCXHDL6fUVufDe8aKz120fT/tlt5IllQSBCVGenrxWnpPjvRte0Y6X4twCqECXH3+ODkchv51ieEPFOh+GDdu1jd3Dys0aSI4w0J7EGpvXnh3QqQu126juk7nX2t/BNF4WjsNJ+wWE935kQeXc2MNnjsDV/UdQWLV5UGvXsB3gGEaerqPbcRz9awbLx1omsT2lm9sukw2Z82G5kbJTHJUY6Zplz8XSmvIIIhJo6nDZXLv8A7Q9PpXl/VcQ5WjTa0Zqpos+ImX/ha+is3IMEY3DjP3q6u3hmi1q+mbRra2jYH/TVILzcdCO1eda9e6Jf+ObPULjWjPYsqyM8YIMWOQhx0q/bfES0vPEmpJqEkkWlXcXkxyAkldowDjtmitgK04RcVstfvFGSNSG+0LwHo1lqBsWaXUIyH8rknuc5rA8e6Xo3/CPadrOl2v2U3UnPXJUjPNaF3rfgnWtGsNP1C+uALIFUKqVJHTn9KyfHPiLQ73w9p2k6NPJOLaTIypBCge9a4ChUVeMop3vrfsKTXKf/2Q==";
+  var unlocked = {}, photo = "", mine = { f: [], m: [] };
+  try { mine = JSON.parse(localStorage.getItem("anne-mine") || "") || mine; } catch (e) {}
+  function saveMine() { try { localStorage.setItem("anne-mine", JSON.stringify(mine)); } catch (e) {} }
+
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    for (var k in (attrs || {})) {
+      if (k === "text") n.textContent = attrs[k];
+      else if (k === "on") for (var ev in attrs.on) n.addEventListener(ev, attrs.on[ev]);
+      else n.setAttribute(k, attrs[k]);
+    }
+    (kids || []).forEach(function (c) { if (c) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return n;
+  }
+  function safeImg(u) { return typeof u === "string" && /^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(u) && u.length < 60000; }
+  function fmt(ts) {
+    var d = new Date(ts), p = function (n) { return (n < 10 ? "0" : "") + n; };
+    return d.getFullYear() + "/" + p(d.getMonth() + 1) + "/" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+  function setStatus(id, text, cls) { var s = $(id); s.textContent = text || ""; s.className = "status " + (cls || ""); }
+  function friendById(id) { for (var i = 0; i < friends.length; i++) if (friends[i].id === id) return friends[i]; return null; }
+  function avatarEl(f) {
+    return el("img", { src: f && safeImg(f.photo) ? f.photo : DEF, alt: (f ? f.name : "") + " 的大頭貼" });
+  }
+  function armDelete(btn, action) {
+    var armed = false, t;
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (!armed) { armed = true; btn.textContent = "再按一次確認"; t = setTimeout(function () { armed = false; btn.textContent = "刪除"; }, 3000); return; }
+      clearTimeout(t); action();
+    });
+  }
+
+  /* ---------- tabs ---------- */
+  function route() {
+    var t = location.hash === "#board" ? "board" : "friends";
+    $("#p-friends").hidden = t !== "friends"; $("#p-board").hidden = t !== "board";
+    $("#m-friends").className = t === "friends" ? "on" : ""; $("#m-board").className = t === "board" ? "on" : "";
+  }
+  window.addEventListener("hashchange", route); route();
+
+  /* ---------- render ---------- */
+  function renderFriends() {
+    $("#nFriends").textContent = $("#nFriends2").textContent = friends.length;
+    var box = $("#friendList"); box.textContent = "";
+    var mini = $("#mini"); mini.textContent = "";
+    var newest = friends.slice().reverse();
+    newest.slice(0, 9).forEach(function (f) {
+      var a = el("a", { href: "#friends", title: f.name }, [avatarEl(f)]);
+      mini.appendChild(a);
+    });
+    if (!friends.length) { box.appendChild(el("div", { "class": "empty", text: "還沒有人加入好友，快來當第一位吧！(´∀`)" })); mini.appendChild(el("div", { "class": "small", text: "還沒有人來過" })); }
+    else {
+      var totalF = Math.ceil(newest.length / FPER); if (fpage > totalF) fpage = totalF;
+      var grid = el("ul", { "class": "nine" });
+      grid.style.cssText = "list-style:none;padding:0";
+      newest.slice((fpage - 1) * FPER, fpage * FPER).forEach(function (f) {
+        var ops = el("div", { "class": "ops" }, [el("a", { href: "#board", text: "去留言", on: { click: function () { $("#mWho").value = f.id; } } })]);
+        if (false) {
+          var del = el("a", { href: "#", text: "刪除" });
+          armDelete(del, function () { db.doc("friends/" + f.id).delete().catch(function () {}); });
+          ops.appendChild(del);
+        }
+        grid.appendChild(el("li", { "class": "fc" }, [
+          avatarEl(f), el("b", { text: f.name }), el("div", { "class": "tag", text: f.tag || "" }),
+          el("div", { "class": "date", text: fmt(f.ts).slice(0, 10) + " 加入" }), ops
+        ]));
+      });
+      box.appendChild(grid);
+      if (totalF > 1) {
+        var pgf = el("div", { "class": "pager" }, ["頁次："]);
+        for (var q = 1; q <= totalF; q++) (function (q) {
+          pgf.appendChild(q === fpage ? el("b", { text: q }) : el("a", { href: "#friends", text: q, on: { click: function (e) { e.preventDefault(); fpage = q; renderFriends(); } } }));
+        })(q);
+        box.appendChild(pgf);
+      }
+    }
+    var sel = $("#mWho"), keep = sel.value; sel.textContent = "";
+    if (!friends.length) sel.appendChild(el("option", { value: "", text: "（還沒有好友，請先加入好友）" }));
+    else {
+      sel.appendChild(el("option", { value: "", text: "請選擇你的名字…" }));
+      friends.forEach(function (f) { sel.appendChild(el("option", { value: f.id, text: f.name })); });
+      if (keep && friendById(keep)) sel.value = keep;
+      else if (mine.f.length) { var last = mine.f[mine.f.length - 1]; if (friendById(last)) sel.value = last; }
+    }
+    $("#mWhoHint").textContent = friends.length ? "" : "還沒加入好友嗎？請先到「好友」頁面加入。";
+  }
+
+  function renderMsgs() {
+    $("#nMsgs").textContent = $("#nMsgs2").textContent = msgs.length;
+    var box = $("#msgList"), pg = $("#pager"); box.textContent = ""; pg.textContent = "";
+    if (!msgs.length) { box.appendChild(el("div", { "class": "empty", text: "還沒有留言，來寫下第一則生日祝福吧！(*´∀`)~♥" })); return; }
+    var total = Math.ceil(msgs.length / PER); if (page > total) page = total;
+    var list = msgs.map(function (m, i) { return { m: m, no: i + 1 }; }).reverse().slice((page - 1) * PER, page * PER);
+    list.forEach(function (it) {
+      var m = it.m, f = friendById(m.fid);
+      var body;
+      if (m.priv && unlocked[m.id] == null) {
+        var pw = el("input", { type: "password", id: "pw-" + m.id, "aria-label": "密碼", placeholder: "輸入密碼", autocomplete: "off" });
+        var st = el("div", { "class": "status err" });
+        var go = function () {
+          if (!pw.value) return;
+          decrypt(m, pw.value).then(function (t) { unlocked[m.id] = t; renderMsgs(); },
+            function () { st.textContent = "密碼不正確，請再試一次。"; });
+        };
+        pw.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); go(); } });
+        body = el("div", { "class": "lock" }, [
+          el("div", { text: "🔒 這是一則悄悄話" }),
+          el("div", { "class": "small", text: m.hint ? "密碼提示：" + m.hint : "需要密碼才能閱讀" }),
+          el("div", { "class": "row" }, [pw, el("button", { "class": "btn s", type: "button", text: "解鎖", on: { click: go } })]), st
+        ]);
+      } else body = el("div", { "class": "body", text: m.priv ? unlocked[m.id] : m.text });
+      var foot = null;
+      if (false) {
+        var del = el("a", { href: "#", text: "刪除" });
+        armDelete(del, function () { db.doc("messages/" + m.id).delete().catch(function () {}); });
+        foot = el("div", { "class": "foot" }, [del]);
+      }
+      box.appendChild(el("div", { "class": "msg" }, [
+        el("div", { "class": "side" }, [avatarEl(f), el("b", { text: m.name })]),
+        el("div", { "class": "main" }, [
+          el("div", { "class": "head" }, [el("span", { text: "#" + it.no + (m.priv ? "　🔒悄悄話" : "") }), el("span", { text: fmt(m.ts) })]),
+          body, foot
+        ])
+      ]));
+    });
+    if (total > 1) {
+      pg.appendChild(document.createTextNode("頁次："));
+      for (var p = 1; p <= total; p++) {
+        (function (p) {
+          pg.appendChild(p === page ? el("b", { text: p }) : el("a", { href: "#board", text: p, on: { click: function (e) { e.preventDefault(); page = p; renderMsgs(); } } }));
+        })(p);
+      }
+    }
+  }
+
+  /* ---------- crypto (悄悄話) ---------- */
+  function b64(u8) { var s = ""; for (var i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(s); }
+  function unb64(s) { var b = atob(s), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
+  function key(pw, salt) {
+    var enc = new TextEncoder();
+    return crypto.subtle.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveKey"]).then(function (k) {
+      return crypto.subtle.deriveKey({ name: "PBKDF2", salt: salt, iterations: 150000, hash: "SHA-256" }, k, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+    });
+  }
+  function encrypt(text, pw) {
+    var salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    return key(pw, salt).then(function (k) { return crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, k, new TextEncoder().encode(text)); })
+      .then(function (ct) { return { salt: b64(salt), iv: b64(iv), ct: b64(new Uint8Array(ct)) }; });
+  }
+  function decrypt(m, pw) {
+    return key(pw, unb64(m.salt)).then(function (k) { return crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(m.iv) }, k, unb64(m.ct)); })
+      .then(function (buf) { return new TextDecoder().decode(buf); });
+  }
+
+  function resetPrev() { var b = $("#fPrev"); b.textContent = ""; b.appendChild(el("img", { src: DEF, alt: "預設大頭貼" })); }
+  /* ---------- photo → 128px square jpeg ---------- */
+  $("#fFile").addEventListener("change", function (e) {
+    var file = e.target.files && e.target.files[0]; photo = ""; setStatus("#fStatus", "");
+    resetPrev();
+    if (!file) return;
+    if (!/^image\//.test(file.type)) { setStatus("#fStatus", "請選擇圖片檔（jpg、png 等）。", "err"); e.target.value = ""; return; }
+    var r = new FileReader();
+    r.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var S = 160, c = document.createElement("canvas"); c.width = c.height = S;
+        var side = Math.min(img.width, img.height), sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+        var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, S, S); g.drawImage(img, sx, sy, side, side, 0, 0, S, S);
+        photo = c.toDataURL("image/jpeg", 0.82);
+        var box = $("#fPrev"); box.textContent = ""; box.appendChild(el("img", { src: photo, alt: "預覽" }));
+      };
+      img.onerror = function () { setStatus("#fStatus", "這張圖片無法讀取，請換一張試試。", "err"); };
+      img.src = r.result;
+    };
+    r.readAsDataURL(file);
+  });
+
+  /* ---------- forms ---------- */
+  $("#friendForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = $("#fName").value.trim(), tag = $("#fTag").value.trim();
+    if (!db) return setStatus("#fStatus", "資料庫目前無法使用，請稍後再試。", "err");
+    if (!name) return setStatus("#fStatus", "請輸入暱稱。", "err");
+    $("#fBtn").disabled = true; setStatus("#fStatus", "送出中…");
+    db.collection("friends").add({ name: name, tag: tag, photo: photo || "", ts: Date.now() }).then(function (ref) {
+      mine.f.push(ref.id); saveMine();
+      $("#friendForm").reset(); photo = "";
+      resetPrev();
+      setStatus("#fStatus", "加入成功！現在可以到留言板寫祝福囉。", "ok");
+    }).catch(function (err) {
+      setStatus("#fStatus", "加入失敗，請稍後再試。", "err");
+    }).then(function () { $("#fBtn").disabled = false; });
+  });
+
+  $("#mText").addEventListener("input", function () {
+    var n = Array.from(this.value).length, c = $("#mCnt");
+    c.textContent = n + " / 2000 字"; c.className = "cnt" + (n > 2000 ? " over" : "");
+  });
+  $("#mPriv").addEventListener("change", function () { $("#lockRow").hidden = !this.checked; });
+
+  $("#msgForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var fid = $("#mWho").value, f = friendById(fid), text = $("#mText").value.trim(), priv = $("#mPriv").checked;
+    if (!db) return setStatus("#mStatus", "資料庫目前無法使用，請稍後再試。", "err");
+    if (!f) return setStatus("#mStatus", "請先選擇你的名字；還沒加入好友的話，請先到「好友」加入。", "err");
+    if (!text) return setStatus("#mStatus", "請輸入留言內容。", "err");
+    if (Array.from(text).length > 2000) return setStatus("#mStatus", "留言超過 2000 字，請刪減一些。", "err");
+    var pw = $("#mPw").value;
+    if (priv) {
+      if (pw.length < 4) return setStatus("#mStatus", "密碼至少需要 4 個字元。", "err");
+      if (pw !== $("#mPw2").value) return setStatus("#mStatus", "兩次輸入的密碼不一樣。", "err");
+      if (!window.crypto || !crypto.subtle) return setStatus("#mStatus", "此瀏覽器不支援加密，無法送出悄悄話。", "err");
+    }
+    $("#mBtn").disabled = true; setStatus("#mStatus", priv ? "加密並送出中…" : "送出中…");
+    var base = { fid: fid, name: f.name, ts: Date.now() };
+    var make = priv ? encrypt(text, pw).then(function (x) { return Object.assign(base, { priv: true, hint: $("#mHint").value.trim(), salt: x.salt, iv: x.iv, ct: x.ct }); })
+                    : Promise.resolve(Object.assign(base, { priv: false, text: text }));
+    make.then(function (doc) { return db.collection("messages").add(doc); }).then(function (ref) {
+      mine.m.push(ref.id); saveMine();
+      if (priv) unlocked[ref.id] = text;
+      $("#mText").value = ""; $("#mPw").value = $("#mPw2").value = $("#mHint").value = ""; $("#mPriv").checked = false; $("#lockRow").hidden = true;
+      $("#mCnt").textContent = "0 / 2000 字"; page = 1;
+      setStatus("#mStatus", "留言送出了，謝謝你的祝福！", "ok");
+    }).catch(function (err) {
+      setStatus("#mStatus", "送出失敗，請稍後再試。", "err");
+    }).then(function () { $("#mBtn").disabled = false; });
+  });
+
+  /* ---------- data ---------- */
+  function fail() {
+    var m = "資料庫目前連不上，請重新整理頁面。";
+    $("#friendList").textContent = ""; $("#friendList").appendChild(el("div", { "class": "empty", text: m }));
+    $("#msgList").textContent = ""; $("#msgList").appendChild(el("div", { "class": "empty", text: m }));
+  }
+  function renderOwner() { $("#ownerImg").src = safeImg(ownerPhoto) ? ownerPhoto : DEF; }
+  function square(file, S, cb, errCb) {
+    var r = new FileReader();
+    r.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var c = document.createElement("canvas"); c.width = c.height = S;
+        var side = Math.min(img.width, img.height), sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+        var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, S, S); g.drawImage(img, sx, sy, side, side, 0, 0, S, S);
+        cb(c.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = errCb; img.src = r.result;
+    };
+    r.readAsDataURL(file);
+  }
+  $("#ownerToggle").addEventListener("click", function (e) { e.preventDefault(); $("#ownerBox").hidden = !$("#ownerBox").hidden; });
+  $("#ownerBtn").addEventListener("click", function () {
+    var file = $("#ownerFile").files && $("#ownerFile").files[0], code = $("#ownerCode").value;
+    if (!code) { $("#ownerSt").textContent = "請輸入主人密碼。"; return; }
+    if (!file) { $("#ownerSt").textContent = "請先選擇一張照片。"; return; }
+    $("#ownerSt").textContent = "上傳中…";
+    square(file, 256, function (url) {
+      var batch = db.batch();
+      batch.set(db.doc("owner/key"), { code: code });
+      batch.set(db.doc("site/profile"), { photo: url, ts: Date.now() });
+      batch.commit().then(function () { $("#ownerSt").textContent = "已更新！"; $("#ownerFile").value = ""; })
+        .catch(function () { $("#ownerSt").textContent = "更新失敗，主人密碼可能不對。"; });
+    }, function () { $("#ownerSt").textContent = "這張圖片無法讀取。"; });
+  });
+  renderFriends(); renderMsgs(); renderOwner(); resetPrev();
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } catch (err) { fail(); return; }
+  db.collection("friends").orderBy("ts", "asc").limit(500).onSnapshot(function (s) {
+    friends = s.docs.map(function (x) { var o = x.data(); o.id = x.id; return o; });
+    renderFriends(); renderMsgs();
+  }, fail);
+  db.doc("site/profile").onSnapshot(function (d) { var o = d.exists ? d.data() : null; ownerPhoto = o && o.photo || ""; renderOwner(); }, function () {});
+  db.collection("messages").orderBy("ts", "asc").limit(1000).onSnapshot(function (s) {
+    msgs = s.docs.map(function (x) { var o = x.data(); o.id = x.id; return o; });
+    renderMsgs();
+  }, fail);
+})();
+</script>
+
+</body>
+</html>
