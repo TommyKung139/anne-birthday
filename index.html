@@ -77,6 +77,19 @@ dl.info dt{color:var(--mute)} dl.info dd{margin:0}
 .nine .fc img{width:100%;height:auto;aspect-ratio:1;max-width:170px}
 .ownerop{text-align:center;margin-top:4px;font-size:12px}
 .ownerop input{margin-top:4px;font-size:11px}
+
+.modal{position:fixed;inset:0;z-index:50;background:rgba(20,30,60,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.mbox{background:var(--box);border:1px solid var(--line);max-width:100%;max-height:100%;overflow:auto;box-shadow:4px 4px 0 rgba(0,0,0,.25)}
+.mbox>.t{background:linear-gradient(var(--blue-top),var(--blue));color:#fff;font-weight:bold;padding:2px 8px;letter-spacing:1px}
+.mbody{padding:10px;text-align:center}
+.stage{position:relative;display:inline-block;line-height:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;background:#fff;margin-bottom:6px}
+.stage img{display:block;max-width:min(78vw,440px);max-height:58vh;pointer-events:none}
+.sel{position:absolute;border:2px dashed #fff;outline:1px solid var(--pink);box-shadow:0 0 0 9999px rgba(0,0,0,.5);cursor:move;touch-action:none}
+.sel .hd{position:absolute;right:-2px;bottom:-2px;width:18px;height:18px;background:var(--pink);border:2px solid #fff;cursor:nwse-resize;touch-action:none}
+.edit textarea{min-height:130px}
+.edit .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.foot a{margin-left:10px}
+.ownerop input{margin-top:4px;font-size:11px}
 /* main */
 .pane[hidden]{display:none}
 .h2{margin:0 0 8px;font-size:16px;color:var(--blue);border-bottom:2px solid var(--blue);padding-bottom:3px}
@@ -157,9 +170,12 @@ textarea{min-height:170px;resize:vertical;line-height:1.7}
           <div class="avatar"><img id="ownerImg" alt="李蓓雯的大頭貼" width="176" height="176"></div>
           <div class="ownerop" id="ownerOp"><a href="#" id="ownerToggle">小站主人登入</a>
             <div id="ownerBox" hidden>
-              <input type="password" id="ownerCode" placeholder="主人密碼" autocomplete="off" aria-label="主人密碼">
-              <input type="file" id="ownerFile" accept="image/*">
-              <button class="btn s" type="button" id="ownerBtn">更新大頭貼</button>
+              <div id="ownerLogin"><input type="password" id="ownerCode" placeholder="主人密碼" autocomplete="off" aria-label="主人密碼"><button class="btn s" type="button" id="ownerLoginBtn">登入</button></div>
+              <div id="ownerTools" hidden>
+                <input type="file" id="ownerFile" accept="image/*"><button class="btn s" type="button" id="ownerBtn">更新大頭貼</button>
+                <div class="small">主人模式：好友與留言旁會出現「刪除」。</div>
+                <a href="#" id="ownerOut">登出</a>
+              </div>
             </div>
             <div class="small" id="ownerSt" role="status"></div></div>
           <p class="who">李蓓雯<small>Anne Lee</small></p>
@@ -239,6 +255,16 @@ textarea{min-height:170px;resize:vertical;line-height:1.7}
   <div class="foot-note">© 2026 李蓓雯的小站 All Rights Reserved　‧　建議使用 1024×768 解析度、Internet Explorer 6.0 瀏覽　‧　(^o^)/</div>
 </div>
 
+<div class="modal" id="cropModal" hidden role="dialog" aria-modal="true" aria-label="裁切大頭貼">
+  <div class="mbox">
+    <div class="t">裁切大頭貼</div>
+    <div class="mbody">
+      <div class="stage" id="cropStage"><img id="cropImg" alt="要裁切的照片"><div class="sel" id="cropSel"><i class="hd" id="cropHd"></i></div></div>
+      <div class="small">拖曳方框移動位置，拖曳右下角粉紅方塊調整大小。</div>
+    </div>
+    <div class="btnrow"><button class="btn" id="cropOk" type="button">確定</button><button class="btn" id="cropNo" type="button">取消</button></div>
+  </div>
+</div>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
@@ -255,6 +281,9 @@ var firebaseConfig = {
 (function () {
   var $ = function (s) { return document.querySelector(s); };
   var db = null, friends = [], msgs = [], page = 1, PER = 8, fpage = 1, FPER = 9, ownerPhoto = "";
+  var toks = {}, pwmem = {}, ownerCode = "", editing = null, editDraft = "";
+  try { toks = JSON.parse(localStorage.getItem("anne-tok") || "") || {}; } catch (e) {}
+  function saveToks() { try { localStorage.setItem("anne-tok", JSON.stringify(toks)); } catch (e) {} }
   var DEF = "data:image/jpeg;base64,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";
   var unlocked = {}, photo = "", mine = { f: [], m: [] };
   try { mine = JSON.parse(localStorage.getItem("anne-mine") || "") || mine; } catch (e) {}
@@ -314,9 +343,9 @@ var firebaseConfig = {
       grid.style.cssText = "list-style:none;padding:0";
       newest.slice((fpage - 1) * FPER, fpage * FPER).forEach(function (f) {
         var ops = el("div", { "class": "ops" }, [el("a", { href: "#board", text: "去留言", on: { click: function () { $("#mWho").value = f.id; } } })]);
-        if (false) {
+        if (ownerCode) {
           var del = el("a", { href: "#", text: "刪除" });
-          armDelete(del, function () { db.doc("friends/" + f.id).delete().catch(function () {}); });
+          armDelete(del, function () { var b = db.batch(); b.set(db.doc("owner/key"), { code: ownerCode }); b.delete(db.doc("friends/" + f.id)); b.commit().catch(function () {}); });
           ops.appendChild(del);
         }
         grid.appendChild(el("li", { "class": "fc" }, [
@@ -344,6 +373,33 @@ var firebaseConfig = {
     $("#mWhoHint").textContent = friends.length ? "" : "還沒加入好友嗎？請先到「好友」頁面加入。";
   }
 
+  function removeMsg(id, mineMsg) {
+    var b = db.batch();
+    if (mineMsg) b.set(db.doc("proofs/" + id), { p: toks[id] }); else b.set(db.doc("owner/key"), { code: ownerCode });
+    b.delete(db.doc("messages/" + id));
+    b.commit().then(function () { delete toks[id]; saveToks(); }).catch(function () {});
+  }
+  function editForm(m) {
+    var ta = el("textarea", { id: "eText", maxlength: "2000", "aria-label": "編輯留言" }); ta.value = editDraft;
+    ta.addEventListener("input", function () { editDraft = ta.value; });
+    var st = el("span", { "class": "status" });
+    var save = el("button", { "class": "btn s", type: "button", text: "儲存" });
+    save.addEventListener("click", function () {
+      var t = ta.value.trim();
+      if (!t) { st.className = "status err"; st.textContent = "留言不能是空的。"; return; }
+      if (Array.from(t).length > 2000) { st.className = "status err"; st.textContent = "超過 2000 字。"; return; }
+      save.disabled = true; st.className = "status"; st.textContent = "儲存中…";
+      var fields = m.priv ? encrypt(t, pwmem[m.id]) : Promise.resolve({ text: t });
+      fields.then(function (f) {
+        var b = db.batch(); f.edited = Date.now();
+        b.set(db.doc("proofs/" + m.id), { p: toks[m.id] });
+        b.update(db.doc("messages/" + m.id), f);
+        return b.commit().then(function () { if (m.priv) unlocked[m.id] = t; editing = null; editDraft = ""; renderMsgs(); });
+      }).catch(function () { save.disabled = false; st.className = "status err"; st.textContent = "儲存失敗，請稍後再試。"; });
+    });
+    var cancel = el("button", { "class": "btn s", type: "button", text: "取消", on: { click: function () { editing = null; editDraft = ""; renderMsgs(); } } });
+    return el("div", { "class": "body edit", style: "white-space:normal" }, [ta, el("div", { "class": "row" }, [save, cancel, st])]);
+  }
   function renderMsgs() {
     $("#nMsgs").textContent = $("#nMsgs2").textContent = msgs.length;
     var box = $("#msgList"), pg = $("#pager"); box.textContent = ""; pg.textContent = "";
@@ -358,7 +414,7 @@ var firebaseConfig = {
         var st = el("div", { "class": "status err" });
         var go = function () {
           if (!pw.value) return;
-          decrypt(m, pw.value).then(function (t) { unlocked[m.id] = t; renderMsgs(); },
+          decrypt(m, pw.value).then(function (t) { unlocked[m.id] = t; pwmem[m.id] = pw.value; renderMsgs(); },
             function () { st.textContent = "密碼不正確，請再試一次。"; });
         };
         pw.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); go(); } });
@@ -368,16 +424,21 @@ var firebaseConfig = {
           el("div", { "class": "row" }, [pw, el("button", { "class": "btn s", type: "button", text: "解鎖", on: { click: go } })]), st
         ]);
       } else body = el("div", { "class": "body", text: m.priv ? unlocked[m.id] : m.text });
-      var foot = null;
-      if (false) {
-        var del = el("a", { href: "#", text: "刪除" });
-        armDelete(del, function () { db.doc("messages/" + m.id).delete().catch(function () {}); });
-        foot = el("div", { "class": "foot" }, [del]);
+      if (editing === m.id) body = editForm(m);
+      var isMine = !!toks[m.id], acts = [];
+      if (editing !== m.id) {
+        if (isMine && (!m.priv || unlocked[m.id] != null)) acts.push(el("a", { href: "#board", text: "編輯", on: { click: function (e) { e.preventDefault(); editing = m.id; editDraft = m.priv ? unlocked[m.id] : m.text; renderMsgs(); } } }));
+        if (isMine || ownerCode) {
+          var del = el("a", { href: "#", text: "刪除" });
+          armDelete(del, function () { removeMsg(m.id, isMine); });
+          acts.push(del);
+        }
       }
+      var foot = acts.length ? el("div", { "class": "foot" }, acts) : null;
       box.appendChild(el("div", { "class": "msg" }, [
         el("div", { "class": "side" }, [avatarEl(f), el("b", { text: m.name })]),
         el("div", { "class": "main" }, [
-          el("div", { "class": "head" }, [el("span", { text: "#" + it.no + (m.priv ? "　🔒悄悄話" : "") }), el("span", { text: fmt(m.ts) })]),
+          el("div", { "class": "head" }, [el("span", { text: "#" + it.no + (m.priv ? "　🔒悄悄話" : "") + (m.edited ? "　（已編輯）" : "") }), el("span", { text: fmt(m.ts) })]),
           body, foot
         ])
       ]));
@@ -412,26 +473,49 @@ var firebaseConfig = {
   }
 
   function resetPrev() { var b = $("#fPrev"); b.textContent = ""; b.appendChild(el("img", { src: DEF, alt: "預設大頭貼" })); }
-  /* ---------- photo → 128px square jpeg ---------- */
-  $("#fFile").addEventListener("change", function (e) {
-    var file = e.target.files && e.target.files[0]; photo = ""; setStatus("#fStatus", "");
-    resetPrev();
-    if (!file) return;
-    if (!/^image\//.test(file.type)) { setStatus("#fStatus", "請選擇圖片檔（jpg、png 等）。", "err"); e.target.value = ""; return; }
+
+  /* ---------- 裁切：正方形選擇框 ---------- */
+  function cropper(file, S, done, cancelled) {
+    if (!/^image\//.test(file.type)) { cancelled("請選擇圖片檔（jpg、png 等）。"); return; }
     var r = new FileReader();
     r.onload = function () {
-      var img = new Image();
+      var img = $("#cropImg"), modal = $("#cropModal"), sel = $("#cropSel"), hd = $("#cropHd");
+      var W = 0, H = 0, x = 0, y = 0, side = 0, MIN = 40;
+      function paint() { sel.style.left = x + "px"; sel.style.top = y + "px"; sel.style.width = side + "px"; sel.style.height = side + "px"; }
+      function close() { modal.hidden = true; $("#cropOk").onclick = $("#cropNo").onclick = null; sel.onpointerdown = hd.onpointerdown = null; img.onload = img.onerror = null; }
       img.onload = function () {
-        var S = 160, c = document.createElement("canvas"); c.width = c.height = S;
-        var side = Math.min(img.width, img.height), sx = (img.width - side) / 2, sy = (img.height - side) / 2;
-        var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, S, S); g.drawImage(img, sx, sy, side, side, 0, 0, S, S);
-        photo = c.toDataURL("image/jpeg", 0.82);
-        var box = $("#fPrev"); box.textContent = ""; box.appendChild(el("img", { src: photo, alt: "預覽" }));
+        modal.hidden = false;
+        W = img.clientWidth; H = img.clientHeight; side = Math.min(W, H); x = (W - side) / 2; y = (H - side) / 2; paint();
       };
-      img.onerror = function () { setStatus("#fStatus", "這張圖片無法讀取，請換一張試試。", "err"); };
+      img.onerror = function () { close(); cancelled("這張圖片無法讀取，請換一張試試。"); };
+      function drag(node, onMove) {
+        node.onpointerdown = function (e) {
+          e.preventDefault(); e.stopPropagation(); node.setPointerCapture(e.pointerId);
+          var sx = e.clientX, sy = e.clientY, ox = x, oy = y, os = side;
+          node.onpointermove = function (m) { onMove(m.clientX - sx, m.clientY - sy, ox, oy, os); paint(); };
+          node.onpointerup = node.onpointercancel = function () { node.onpointermove = node.onpointerup = node.onpointercancel = null; };
+        };
+      }
+      drag(sel, function (dx, dy, ox, oy) { x = Math.max(0, Math.min(W - side, ox + dx)); y = Math.max(0, Math.min(H - side, oy + dy)); });
+      drag(hd, function (dx, dy, ox, oy, os) { side = Math.max(MIN, Math.min(os + Math.max(dx, dy), W - ox, H - oy)); });
+      $("#cropOk").onclick = function () {
+        var k = img.naturalWidth / img.clientWidth;
+        var c = document.createElement("canvas"); c.width = c.height = S;
+        var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, S, S);
+        g.drawImage(img, x * k, y * k, side * k, side * k, 0, 0, S, S);
+        var url = c.toDataURL("image/jpeg", 0.85); close(); done(url);
+      };
+      $("#cropNo").onclick = function () { close(); cancelled(""); };
       img.src = r.result;
     };
     r.readAsDataURL(file);
+  }
+  $("#fFile").addEventListener("change", function (e) {
+    var input = e.target, file = input.files && input.files[0]; photo = ""; setStatus("#fStatus", ""); resetPrev();
+    if (!file) return;
+    cropper(file, 160, function (url) {
+      photo = url; var box = $("#fPrev"); box.textContent = ""; box.appendChild(el("img", { src: photo, alt: "預覽" }));
+    }, function (msg) { input.value = ""; if (msg) setStatus("#fStatus", msg, "err"); });
   });
 
   /* ---------- forms ---------- */
@@ -474,9 +558,14 @@ var firebaseConfig = {
     var base = { fid: fid, name: f.name, ts: Date.now() };
     var make = priv ? encrypt(text, pw).then(function (x) { return Object.assign(base, { priv: true, hint: $("#mHint").value.trim(), salt: x.salt, iv: x.iv, ct: x.ct }); })
                     : Promise.resolve(Object.assign(base, { priv: false, text: text }));
-    make.then(function (doc) { return db.collection("messages").add(doc); }).then(function (ref) {
+    make.then(function (doc) {
+      var ref = db.collection("messages").doc(), tok = b64(crypto.getRandomValues(new Uint8Array(24))), b = db.batch();
+      b.set(db.doc("secrets/" + ref.id), { t: tok }); b.set(ref, doc);
+      toks[ref.id] = tok; saveToks(); if (priv) { unlocked[ref.id] = text; pwmem[ref.id] = pw; }
+      return b.commit().then(function () { return ref; }, function (err) { delete toks[ref.id]; saveToks(); throw err; });
+    }).then(function (ref) {
       mine.m.push(ref.id); saveMine();
-      if (priv) unlocked[ref.id] = text;
+      if (priv) { unlocked[ref.id] = text; pwmem[ref.id] = pw; }
       $("#mText").value = ""; $("#mPw").value = $("#mPw2").value = $("#mHint").value = ""; $("#mPriv").checked = false; $("#lockRow").hidden = true;
       $("#mCnt").textContent = "0 / 2000 字"; page = 1;
       setStatus("#mStatus", "留言送出了，謝謝你的祝福！", "ok");
@@ -492,33 +581,26 @@ var firebaseConfig = {
     $("#msgList").textContent = ""; $("#msgList").appendChild(el("div", { "class": "empty", text: m }));
   }
   function renderOwner() { $("#ownerImg").src = safeImg(ownerPhoto) ? ownerPhoto : DEF; }
-  function square(file, S, cb, errCb) {
-    var r = new FileReader();
-    r.onload = function () {
-      var img = new Image();
-      img.onload = function () {
-        var c = document.createElement("canvas"); c.width = c.height = S;
-        var side = Math.min(img.width, img.height), sx = (img.width - side) / 2, sy = (img.height - side) / 2;
-        var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, S, S); g.drawImage(img, sx, sy, side, side, 0, 0, S, S);
-        cb(c.toDataURL("image/jpeg", 0.85));
-      };
-      img.onerror = errCb; img.src = r.result;
-    };
-    r.readAsDataURL(file);
-  }
   $("#ownerToggle").addEventListener("click", function (e) { e.preventDefault(); $("#ownerBox").hidden = !$("#ownerBox").hidden; });
+  function ownerUI() { $("#ownerLogin").hidden = !!ownerCode; $("#ownerTools").hidden = !ownerCode; renderFriends(); renderMsgs(); }
+  $("#ownerLoginBtn").addEventListener("click", function () {
+    var code = $("#ownerCode").value; if (!code) { $("#ownerSt").textContent = "請輸入主人密碼。"; return; }
+    $("#ownerSt").textContent = "確認中…";
+    db.doc("owner/key").set({ code: code }).then(function () { ownerCode = code; $("#ownerCode").value = ""; $("#ownerSt").textContent = "已登入主人模式。"; ownerUI(); })
+      .catch(function () { $("#ownerSt").textContent = "主人密碼不正確。"; });
+  });
+  $("#ownerOut").addEventListener("click", function (e) { e.preventDefault(); ownerCode = ""; $("#ownerSt").textContent = ""; ownerUI(); });
   $("#ownerBtn").addEventListener("click", function () {
-    var file = $("#ownerFile").files && $("#ownerFile").files[0], code = $("#ownerCode").value;
-    if (!code) { $("#ownerSt").textContent = "請輸入主人密碼。"; return; }
+    var inp = $("#ownerFile"), file = inp.files && inp.files[0];
     if (!file) { $("#ownerSt").textContent = "請先選擇一張照片。"; return; }
-    $("#ownerSt").textContent = "上傳中…";
-    square(file, 256, function (url) {
+    cropper(file, 256, function (url) {
+      $("#ownerSt").textContent = "上傳中…";
       var batch = db.batch();
-      batch.set(db.doc("owner/key"), { code: code });
+      batch.set(db.doc("owner/key"), { code: ownerCode });
       batch.set(db.doc("site/profile"), { photo: url, ts: Date.now() });
-      batch.commit().then(function () { $("#ownerSt").textContent = "已更新！"; $("#ownerFile").value = ""; })
-        .catch(function () { $("#ownerSt").textContent = "更新失敗，主人密碼可能不對。"; });
-    }, function () { $("#ownerSt").textContent = "這張圖片無法讀取。"; });
+      batch.commit().then(function () { $("#ownerSt").textContent = "已更新！"; inp.value = ""; })
+        .catch(function () { $("#ownerSt").textContent = "更新失敗，請重新登入再試。"; });
+    }, function (msg) { inp.value = ""; $("#ownerSt").textContent = msg || ""; });
   });
   renderFriends(); renderMsgs(); renderOwner(); resetPrev();
   try {
