@@ -90,6 +90,14 @@ dl.info dt{color:var(--mute)} dl.info dd{margin:0}
 .edit .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
 .foot a{margin-left:10px}
 .ownerop input{margin-top:4px;font-size:11px}
+
+.loading{position:fixed;inset:0;z-index:80;background:rgba(201,222,245,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--blue);font-weight:bold;font-size:13px}
+.spin{width:34px;height:34px;border:4px solid var(--line-soft);border-top-color:var(--pink);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+form.f>.t{cursor:pointer;border:0;width:100%;display:flex;justify-content:space-between;align-items:center;font:inherit}
+form.f>.t .chev{display:inline-block;transition:transform .15s ease;font-size:11px}
+.f.open>.t .chev{transform:rotate(90deg)}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}form.f>.t .chev{transition:none}}
 /* main */
 .pane[hidden]{display:none}
 .h2{margin:0 0 8px;font-size:16px;color:var(--blue);border-bottom:2px solid var(--blue);padding-bottom:3px}
@@ -154,6 +162,7 @@ textarea{min-height:170px;resize:vertical;line-height:1.7}
 </head>
 <body>
 
+<div class="loading" id="pageLoading" role="status" aria-live="polite"><div class="spin" aria-hidden="true"></div><div>資料讀取中…</div></div>
 <div class="wrap">
   <div class="banner">
     <span class="spark" aria-hidden="true">★</span><span class="spark b" aria-hidden="true">☆</span>
@@ -210,18 +219,20 @@ textarea{min-height:170px;resize:vertical;line-height:1.7}
         <div id="friendList"></div>
 
         <form class="f" id="friendForm" autocomplete="off">
-          <div class="t">加入好友</div>
-          <div class="frow"><label for="fName">暱稱 <span class="req">*</span></label><div><input type="text" id="fName" maxlength="12" placeholder="請輸入你的名字或暱稱（最多 12 字）"></div></div>
-          <div class="frow"><label for="fTag">一句話</label><div><input type="text" id="fTag" maxlength="30" placeholder="想對大家說的話（選填，最多 30 字）"></div></div>
-          <div class="frow"><span class="lab">大頭貼</span>
-            <div>
-              <div class="pv"><div id="fPrev"></div>
-                <div><input type="file" id="fFile" accept="image/*"><div class="small">請選擇一張你的照片，系統會自動裁成正方形。沒上傳的話會顯示「我沒設大頭貼」。</div></div>
+          <button type="button" class="t" id="friendToggle" aria-expanded="false" aria-controls="friendBody">加入好友<span class="chev" aria-hidden="true">▸</span></button>
+          <div id="friendBody" hidden>
+            <div class="frow"><label for="fName">暱稱 <span class="req">*</span></label><div><input type="text" id="fName" maxlength="12" placeholder="請輸入你的名字或暱稱（最多 12 字）"></div></div>
+            <div class="frow"><label for="fTag">一句話</label><div><input type="text" id="fTag" maxlength="30" placeholder="想對大家說的話（選填，最多 30 字）"></div></div>
+            <div class="frow"><span class="lab">大頭貼</span>
+              <div>
+                <div class="pv"><div id="fPrev"></div>
+                  <div><input type="file" id="fFile" accept="image/*"><div class="small">請選擇一張你的照片，系統會自動裁成正方形。沒上傳的話會顯示「我沒設大頭貼」。</div></div>
+                </div>
               </div>
             </div>
+            <div class="frow"><label for="fPw">管理密碼</label><div><input type="password" id="fPw" maxlength="40" autocomplete="new-password" placeholder="選填，至少 4 個字元"><div class="small">設定後，之後在任何裝置都能用這個密碼刪除自己的好友資料；沒設的話，只有這個瀏覽器和小站主人能刪除。</div></div></div>
+            <div class="btnrow"><button class="btn" type="submit" id="fBtn">加入好友</button><span class="status" id="fStatus" role="status"></span></div>
           </div>
-          <div class="frow"><label for="fPw">管理密碼</label><div><input type="password" id="fPw" maxlength="40" autocomplete="new-password" placeholder="選填，至少 4 個字元"><div class="small">設定後，之後在任何裝置都能用這個密碼刪除自己的好友資料；沒設的話，只有這個瀏覽器和小站主人能刪除。</div></div></div>
-          <div class="btnrow"><button class="btn" type="submit" id="fBtn">加入好友</button><span class="status" id="fStatus" role="status"></span></div>
         </form>
       </section>
 
@@ -230,22 +241,24 @@ textarea{min-height:170px;resize:vertical;line-height:1.7}
         <h2 class="h2">留言板<em>共 <span id="nMsgs2">0</span> 篇留言</em></h2>
 
         <form class="f" id="msgForm" autocomplete="off" style="margin-bottom:14px">
-          <div class="t">寫下你的祝福</div>
-          <div class="frow"><label for="mWho">我是 <span class="req">*</span></label>
-            <div><select id="mWho"></select><div class="small" id="mWhoHint"></div></div></div>
-          <div class="frow"><label for="mText">留言 <span class="req">*</span></label>
-            <div><textarea id="mText" maxlength="2000" placeholder="蓓雯生日快樂！（最多 2000 字，請使用繁體中文）"></textarea>
-            <div class="cnt" id="mCnt">0 / 2000 字</div></div></div>
-          <div class="frow"><span class="lab">悄悄話</span>
-            <div><label><input type="checkbox" id="mPriv"> 設密碼，只有知道密碼的人才看得到內容</label></div></div>
-          <div class="lockrow" id="lockRow" hidden>
-            <div class="frow"><label for="mPw">密碼 <span class="req">*</span></label><div><input type="password" id="mPw" maxlength="40" autocomplete="new-password" placeholder="至少 4 個字元"></div></div>
-            <div class="frow"><label for="mPw2">確認密碼</label><div><input type="password" id="mPw2" maxlength="40" autocomplete="new-password"></div></div>
-            <div class="frow"><label for="mHint">密碼提示</label><div><input type="text" id="mHint" maxlength="30" placeholder="選填，會公開顯示，例如「我們的暗號」"></div></div>
-            <div class="small">內容會在你的瀏覽器加密後才送出，忘記密碼就無法找回；請記得把密碼告訴蓓雯喔！</div>
+          <button type="button" class="t" id="msgToggle" aria-expanded="false" aria-controls="msgBody">寫下你的祝福<span class="chev" aria-hidden="true">▸</span></button>
+          <div id="msgBody" hidden>
+            <div class="frow"><label for="mWho">我是 <span class="req">*</span></label>
+              <div><select id="mWho"></select><div class="small" id="mWhoHint"></div></div></div>
+            <div class="frow"><label for="mText">留言 <span class="req">*</span></label>
+              <div><textarea id="mText" maxlength="2000" placeholder="蓓雯生日快樂！（最多 2000 字，請使用繁體中文）"></textarea>
+              <div class="cnt" id="mCnt">0 / 2000 字</div></div></div>
+            <div class="frow"><span class="lab">悄悄話</span>
+              <div><label><input type="checkbox" id="mPriv"> 設密碼，只有知道密碼的人才看得到內容</label></div></div>
+            <div class="lockrow" id="lockRow" hidden>
+              <div class="frow"><label for="mPw">密碼 <span class="req">*</span></label><div><input type="password" id="mPw" maxlength="40" autocomplete="new-password" placeholder="至少 4 個字元"></div></div>
+              <div class="frow"><label for="mPw2">確認密碼</label><div><input type="password" id="mPw2" maxlength="40" autocomplete="new-password"></div></div>
+              <div class="frow"><label for="mHint">密碼提示</label><div><input type="text" id="mHint" maxlength="30" placeholder="選填，會公開顯示，例如「我們的暗號」"></div></div>
+              <div class="small">內容會在你的瀏覽器加密後才送出，忘記密碼就無法找回；請記得把密碼告訴蓓雯喔！</div>
+            </div>
+            <div class="frow"><label for="mAdminPw">管理密碼</label><div><input type="password" id="mAdminPw" maxlength="40" autocomplete="new-password" placeholder="選填，至少 4 個字元"><div class="small">設定後，之後在任何裝置都能用這個密碼編輯或刪除這則留言；沒設的話，只有這個瀏覽器和小站主人能編輯、刪除。（和悄悄話密碼是兩回事）</div></div></div>
+            <div class="btnrow"><button class="btn" type="submit" id="mBtn">送出留言</button><span class="status" id="mStatus" role="status"></span></div>
           </div>
-          <div class="frow"><label for="mAdminPw">管理密碼</label><div><input type="password" id="mAdminPw" maxlength="40" autocomplete="new-password" placeholder="選填，至少 4 個字元"><div class="small">設定後，之後在任何裝置都能用這個密碼編輯或刪除這則留言；沒設的話，只有這個瀏覽器和小站主人能編輯、刪除。（和悄悄話密碼是兩回事）</div></div></div>
-          <div class="btnrow"><button class="btn" type="submit" id="mBtn">送出留言</button><span class="status" id="mStatus" role="status"></span></div>
         </form>
 
         <div id="msgList"></div>
@@ -357,6 +370,18 @@ var firebaseConfig = {
     });
   }
 
+  function bindToggle(formSel, toggleSel, bodySel) {
+    var form = $(formSel), btn = $(toggleSel), body = $(bodySel);
+    btn.addEventListener("click", function () { setOpen(!body.hidden ? false : true); });
+    function setOpen(open) {
+      body.hidden = !open;
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      form.classList.toggle("open", open);
+    }
+    form.setOpen = setOpen;
+  }
+  bindToggle("#friendForm", "#friendToggle", "#friendBody");
+  bindToggle("#msgForm", "#msgToggle", "#msgBody");
   /* ---------- tabs ---------- */
   function route() {
     var t = location.hash === "#board" ? "board" : "friends";
@@ -381,7 +406,7 @@ var firebaseConfig = {
       var grid = el("ul", { "class": "nine" });
       grid.style.cssText = "list-style:none;padding:0";
       newest.slice((fpage - 1) * FPER, fpage * FPER).forEach(function (f) {
-        var ops = el("div", { "class": "ops" }, [el("a", { href: "#board", text: "去留言", on: { click: function () { $("#mWho").value = f.id; } } })]);
+        var ops = el("div", { "class": "ops" }, [el("a", { href: "#board", text: "去留言", on: { click: function () { $("#mWho").value = f.id; $("#msgForm").setOpen(true); } } })]);
         var del = el("a", { href: "#", text: "刪除" });
         armDelete(del, function () { deleteEntry("f", f.id, ops); });
         ops.appendChild(del);
@@ -628,10 +653,14 @@ var firebaseConfig = {
   });
 
   /* ---------- data ---------- */
+  var loaded = { f: false, m: false };
+  function hideLoading() { var o = $("#pageLoading"); if (o) o.hidden = true; }
+  function markLoaded(k) { loaded[k] = true; if (loaded.f && loaded.m) hideLoading(); }
   function fail() {
     var m = "資料庫目前連不上，請重新整理頁面。";
     $("#friendList").textContent = ""; $("#friendList").appendChild(el("div", { "class": "empty", text: m }));
     $("#msgList").textContent = ""; $("#msgList").appendChild(el("div", { "class": "empty", text: m }));
+    hideLoading();
   }
   function renderOwner() { $("#ownerImg").src = safeImg(ownerPhoto) ? ownerPhoto : DEF; }
   $("#ownerToggle").addEventListener("click", function (e) { e.preventDefault(); $("#ownerBox").hidden = !$("#ownerBox").hidden; });
@@ -662,7 +691,7 @@ var firebaseConfig = {
   } catch (err) { fail(); return; }
   db.collection("friends").orderBy("ts", "asc").limit(500).onSnapshot(function (s) {
     friends = s.docs.map(function (x) { var o = x.data(); o.id = x.id; return o; });
-    renderFriends(); renderMsgs();
+    renderFriends(); renderMsgs(); markLoaded("f");
   }, fail);
   try {
     var saved = localStorage.getItem("anne-owner");
@@ -672,7 +701,7 @@ var firebaseConfig = {
   db.doc("site/profile").onSnapshot(function (d) { var o = d.exists ? d.data() : null; ownerPhoto = o && o.photo || ""; renderOwner(); }, function () {});
   db.collection("messages").orderBy("ts", "asc").limit(1000).onSnapshot(function (s) {
     msgs = s.docs.map(function (x) { var o = x.data(); o.id = x.id; return o; });
-    renderMsgs();
+    renderMsgs(); markLoaded("m");
   }, fail);
 })();
 </script>
